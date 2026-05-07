@@ -142,6 +142,62 @@ select { -webkit-appearance: none; appearance: none; }
   transform: translate(3px, 3px);
 }
 
+/* ─── Physics easing (iron-drop — overshoot settle) ─────────── */
+/* cubic-bezier(0.175, 0.885, 0.32, 1.275) produces a natural     */
+/* overshoot that mimics heavy iron landing on concrete.            */
+:root {
+  --ease-iron-drop: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Bottom-sheet iron-drop: slides up with overshoot settle */
+@keyframes kIronDropUp {
+  0%   { transform: translateY(80px) scaleY(0.92); opacity: 0;    }
+  55%  { transform: translateY(-8px) scaleY(1.02); opacity: 1;    }
+  75%  { transform: translateY(4px)  scaleY(0.995);               }
+  100% { transform: translateY(0)    scaleY(1);    opacity: 1;    }
+}
+.kIronDropUp {
+  animation: kIronDropUp 0.4s var(--ease-iron-drop) both;
+}
+
+/* Top-down iron-drop: for modals or overlays entering from above */
+@keyframes kIronDropDown {
+  0%   { transform: translateY(-60px) scaleY(0.88); opacity: 0; }
+  58%  { transform: translateY(8px)   scaleY(1.03); opacity: 1; }
+  78%  { transform: translateY(-4px)  scaleY(0.99);             }
+  100% { transform: translateY(0)     scaleY(1);    opacity: 1; }
+}
+.kIronDropDown {
+  animation: kIronDropDown 0.42s var(--ease-iron-drop) both;
+}
+
+/* ─── PR achievement: dual-pulse gold glow ───────────────────── */
+@keyframes kPRFlash {
+  0%   { box-shadow: 0 0 0    rgba(255,180,0,0);   outline-color: transparent; }
+  25%  { box-shadow: 0 0 28px rgba(255,180,0,0.85); outline-color: #ffb400;    }
+  50%  { box-shadow: 0 0 8px  rgba(255,180,0,0.25); outline-color: transparent; }
+  75%  { box-shadow: 0 0 22px rgba(255,180,0,0.7);  outline-color: #ffb400;    }
+  100% { box-shadow: 0 0 0    rgba(255,180,0,0);                               }
+}
+.kPRFlash {
+  animation: kPRFlash 0.8s ease-out forwards;
+  outline: 2px solid transparent;
+}
+
+/* ─── Focus mode — dim non-critical elements during rest ──────── */
+/* Applied by ActiveWorkoutPage to exercise list when isResting=true */
+.focus-dim {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 0.35s ease, pointer-events 0s 0.35s;
+  user-select: none;
+}
+.focus-restore {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.35s ease;
+}
+
 /* ─── Section divider ────────────────────────────────────────── */
 .brutal-rule {
   height: 2px;
