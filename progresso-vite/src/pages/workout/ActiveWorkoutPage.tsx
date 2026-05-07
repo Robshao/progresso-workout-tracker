@@ -36,6 +36,17 @@ const inputSty: React.CSSProperties = {
   outline: 'none',
 }
 
+/* ── Shake helper (equiv. Flutter Offset animation controller) ── */
+function triggerShake() {
+  const root = document.getElementById('root')
+  if (!root) return
+  root.classList.remove('kShake')
+  // Force reflow so re-adding the class restarts the animation
+  void root.offsetWidth
+  root.classList.add('kShake')
+  setTimeout(() => root.classList.remove('kShake'), 420)
+}
+
 export default function ActiveWorkoutPage() {
   const navigate  = useNavigate()
   const [elapsed, setElapsed] = useState(0)
@@ -43,6 +54,8 @@ export default function ActiveWorkoutPage() {
   const [blocks, setBlocks]   = useState<ExerciseBlock[]>([])
   const [showPicker, setShowPicker] = useState(false)
   const [query, setQuery] = useState('')
+  /* Track which set just fired the done-flash animation */
+  const [flashKey, setFlashKey] = useState<string | null>(null)
 
   useEffect(() => {
     const t = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000)
@@ -86,6 +99,13 @@ export default function ActiveWorkoutPage() {
     }))
   }
   function updateSet(bi: number, si: number, field: keyof SetEntry, val: string|boolean) {
+    /* Trigger shake + flash when a set is marked DONE */
+    if (field === 'done' && val === true) {
+      triggerShake()
+      const key = `${bi}-${si}`
+      setFlashKey(key)
+      setTimeout(() => setFlashKey(null), 450)
+    }
     setBlocks(p => p.map((b,i) => i!==bi ? b : {
       ...b,
       sets: b.sets.map((s,j) => j!==si ? s : { ...s, [field]: val }),
@@ -302,6 +322,7 @@ export default function ActiveWorkoutPage() {
                 />
                 {/* PRIMARY THUMB-ZONE ACTION — right-bottom, 76px wide, full row height */}
                 <button
+                  className={flashKey === `${bi}-${si}` ? 'kDoneFlash' : undefined}
                   onClick={() => updateSet(bi, si, 'done', !set.done)}
                   style={{
                     minHeight: '54px',

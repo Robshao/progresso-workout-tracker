@@ -90,6 +90,33 @@ select { -webkit-appearance: none; appearance: none; }
   border-left: 4px solid var(--primary) !important;
 }
 
+/* ─── Kinetic: screen-shake on set completion ────────────────── */
+/* Equivalent of Flutter AnimationController offset shake        */
+@keyframes kShake {
+  0%   { transform: translateX(0)    rotate(0deg);    }
+  12%  { transform: translateX(-6px) rotate(-0.4deg); }
+  25%  { transform: translateX(6px)  rotate(0.4deg);  }
+  37%  { transform: translateX(-5px) rotate(-0.3deg); }
+  50%  { transform: translateX(5px)  rotate(0.3deg);  }
+  62%  { transform: translateX(-3px) rotate(-0.1deg); }
+  75%  { transform: translateX(3px)  rotate(0.1deg);  }
+  87%  { transform: translateX(-1px);                 }
+  100% { transform: translateX(0)    rotate(0deg);    }
+}
+.kShake {
+  animation: kShake 0.38s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* ─── Kinetic: set-done flash (crimson pulse) ────────────────── */
+@keyframes kDoneFlash {
+  0%   { box-shadow: 0 0 0px rgba(204,17,17,0);   }
+  40%  { box-shadow: 0 0 24px rgba(204,17,17,0.6); }
+  100% { box-shadow: 0 0 6px rgba(204,17,17,0.15); }
+}
+.kDoneFlash {
+  animation: kDoneFlash 0.4s ease-out forwards;
+}
+
 /* ─── Brutal CTA button ──────────────────────────────────────── */
 .btn-brutal {
   display: flex;
