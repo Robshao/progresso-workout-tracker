@@ -80,6 +80,8 @@ export default function HistoryPage() {
             {/* Summary row */}
             <button
               onClick={() => setExpanded(e => e === w.id ? null : w.id)}
+              aria-expanded={expanded === w.id}
+              aria-label={`${w.exercises.map(e => e.name).join(', ') || loc.history.emptySession} — ${expanded === w.id ? 'collapse' : 'expand'} details`}
               style={{
                 display: 'flex', width: '100%', alignItems: 'center',
                 justifyContent: 'space-between', padding: '12px 14px',

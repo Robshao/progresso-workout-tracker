@@ -210,13 +210,15 @@ export function RestTimerOverlay({ restSec, totalSec = 90, hasHighRPE = false, o
           </div>
 
           {/* Cancel — go back to rest */}
+          {/* padding: 14px vertical → 28px+ touch height (content ~16px) = 44px ✓ */}
           <button
             onClick={() => { endHold(); setShowLock(false) }}
             style={{
               background:'transparent', border:'none',
-              color:'var(--text-dim)', fontFamily:'var(--font-mono)',
+              color:'var(--text-muted)', fontFamily:'var(--font-mono)',
               fontSize:'11px', letterSpacing:'0.12em', cursor:'pointer',
-              textDecoration:'underline', padding:'4px',
+              textDecoration:'underline', padding:'14px 24px',
+              minHeight:'44px',
             }}>
             continue resting
           </button>

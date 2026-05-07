@@ -221,7 +221,8 @@ export function ExerciseBlockCard({
         </div>
         <button
           onClick={onRemoveBlock}
-          style={{ background:'transparent', border:`2px solid var(--border-heavy)`, color:accent, fontFamily:'var(--font-mono)', fontSize:'14px', padding:'6px 10px', cursor:'pointer' }}>
+          aria-label={`Remove ${block.exercise.name}`}
+          style={{ background:'transparent', border:`2px solid var(--border-heavy)`, color:accent, fontFamily:'var(--font-mono)', fontSize:'14px', padding:'10px 14px', cursor:'pointer', minWidth:'44px', minHeight:'44px' }}>
           ✕
         </button>
       </div>
@@ -342,11 +343,16 @@ export function ExerciseBlockCard({
                   <button
                     key={type}
                     onClick={() => { haptic.keypress(); onUpdateSet(si, 'setType', type) }}
+                    aria-pressed={active}
+                    aria-label={`Set type: ${type.replace('_', ' ')}`}
                     style={{
-                      padding:'3px 7px',
+                      /* padding: 7px vertical → content ~13px + 14px = ~27px; */
+                      /* minHeight: 36px ensures adequate tap area in this dense row */
+                      padding:'7px 8px',
+                      minHeight:'36px',
                       background: active ? m.bg : 'transparent',
                       border:`2px solid ${active ? m.color : 'var(--border-heavy)'}`,
-                      color: active ? m.color : 'var(--text-dim)',
+                      color: active ? m.color : 'var(--text-muted)',
                       fontFamily:'var(--font-brutal)', fontSize:'9px',
                       fontWeight:700, letterSpacing:'0.06em', cursor:'pointer',
                       transition:'border-color 0.1s,color 0.1s,background 0.1s',
@@ -358,17 +364,24 @@ export function ExerciseBlockCard({
               })}
 
               <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:'5px' }}>
-                <span style={{ fontFamily:'var(--font-brutal)', fontSize:'9px', color:'var(--text-muted)', letterSpacing:'0.08em' }}>RIR</span>
+                <label
+                  htmlFor={`rir-${si}`}
+                  style={{ fontFamily:'var(--font-brutal)', fontSize:'9px', color:'var(--text-muted)', letterSpacing:'0.08em', cursor:'default' }}>
+                  RIR
+                </label>
+                {/* RIR input: 44px wide, 36px min-height to meet touch target */}
                 <input
+                  id={`rir-${si}`}
                   type="number" inputMode="numeric"
                   min={0} max={5} placeholder="—"
+                  aria-label="Reps in reserve (0–5)"
                   value={set.rir}
                   onChange={e => {
                     const v = e.target.value
                     if (v === '' || (parseInt(v) >= 0 && parseInt(v) <= 5))
                       onUpdateSet(si, 'rir', v)
                   }}
-                  style={{ ...kRirBase, color: accentRir }}
+                  style={{ ...kRirBase, color: accentRir, width:'44px', minHeight:'36px' }}
                 />
               </div>
             </div>

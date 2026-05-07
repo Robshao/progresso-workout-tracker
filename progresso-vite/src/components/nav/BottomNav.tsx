@@ -68,32 +68,44 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav style={{
-      display: 'flex', flexDirection: 'row', width: '100%', flexShrink: 0,
-      borderTop: '3px solid var(--primary)', background: 'var(--surface)',
-      position: 'relative',
-    }}>
+    <nav
+      aria-label="Main navigation"
+      style={{
+        display: 'flex', flexDirection: 'row', width: '100%', flexShrink: 0,
+        borderTop: '3px solid var(--primary)', background: 'var(--surface)',
+        position: 'relative',
+      }}>
       <div className="brutal-rule" style={{ position: 'absolute', top: -2, left: 0, right: 0, height: '2px' }}/>
       {tabs.map(({ to, label, Icon }) => (
-        <NavLink key={to} to={to} style={({ isActive }) => ({
-          flex: 1, display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          gap: '5px', paddingTop: '10px',
-          paddingBottom: 'calc(10px + env(safe-area-inset-bottom))',
-          textDecoration: 'none',
-          color: isActive ? 'var(--primary)' : 'var(--text-muted)',
-          borderTop: isActive ? '3px solid var(--primary)' : '3px solid transparent',
-          borderLeft: '1px solid var(--border)',
-          background: isActive ? 'var(--primary-dim)' : 'transparent',
-          transition: 'color 0.1s, background 0.1s',
-        })}>
+        <NavLink
+          key={to}
+          to={to}
+          aria-label={label}
+          style={({ isActive }) => ({
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: '5px',
+            /* Minimum 44px touch target: 10px top + ~24px content + 10px bottom = 44px */
+            paddingTop: '10px',
+            paddingBottom: 'calc(10px + env(safe-area-inset-bottom))',
+            minHeight: '44px',
+            textDecoration: 'none',
+            color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+            borderTop: isActive ? '3px solid var(--primary)' : '3px solid transparent',
+            borderLeft: '1px solid var(--border)',
+            background: isActive ? 'var(--primary-dim)' : 'transparent',
+            transition: 'color 0.1s, background 0.1s',
+          })}>
           {({ isActive }) => (
             <>
-              <Icon active={isActive} />
-              <span style={{
-                fontFamily: 'var(--font-brutal)', fontSize: '9px',
-                fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-              }}>{label}</span>
+              {/* aria-hidden — the NavLink aria-label carries the accessible name */}
+              <Icon active={isActive} aria-hidden="true" />
+              <span
+                aria-hidden="true"
+                style={{
+                  fontFamily: 'var(--font-brutal)', fontSize: '10px',
+                  fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+                }}>{label}</span>
             </>
           )}
         </NavLink>
