@@ -36,6 +36,12 @@ const inputSty: React.CSSProperties = {
   outline: 'none',
 }
 
+/* ── Haptic feedback (equiv. HapticFeedback.lightImpact()) ────── */
+/* Uses Web Vibration API — works on Android Chrome & iOS Safari  */
+const kHapticLight  = () => { try { navigator.vibrate(10) }  catch(_) {} }
+const kHapticMedium = () => { try { navigator.vibrate(25) }  catch(_) {} }
+const kHapticDone   = () => { try { navigator.vibrate([15, 8, 30]) } catch(_) {} }
+
 /* ── Shake helper (equiv. Flutter Offset animation controller) ── */
 function triggerShake() {
   const root = document.getElementById('root')
@@ -73,6 +79,7 @@ export default function ActiveWorkoutPage() {
       .reduce((s2, x) => s2 + (parseFloat(x.weight)||0)*(parseFloat(x.reps)||0), 0), 0)
 
   async function handleFinish() {
+    kHapticMedium()
     if (!confirm('// FINALIZE SESSION? DATA WILL BE FORGED INTO THE LOG.')) return
     const endedAt = Date.now()
     await db.workouts.add({
@@ -89,18 +96,21 @@ export default function ActiveWorkoutPage() {
   }
 
   function addExercise(ex: typeof EXERCISES[0]) {
+    kHapticLight()
     setBlocks(p => [...p, { exercise: ex, sets: [{ weight:'', reps:'', done:false }], repsUnit: '次' }])
     setShowPicker(false); setQuery('')
   }
   function addSet(bi: number) {
+    kHapticLight()
     setBlocks(p => p.map((b,i) => i!==bi ? b : {
       ...b,
       sets: [...b.sets, { weight: b.sets.at(-1)!.weight, reps: b.sets.at(-1)!.reps, done: false }],
     }))
   }
   function updateSet(bi: number, si: number, field: keyof SetEntry, val: string|boolean) {
-    /* Trigger shake + flash when a set is marked DONE */
+    /* Trigger haptic + shake + flash when a set is marked DONE */
     if (field === 'done' && val === true) {
+      kHapticDone()
       triggerShake()
       const key = `${bi}-${si}`
       setFlashKey(key)
