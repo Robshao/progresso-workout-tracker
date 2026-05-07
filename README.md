@@ -1,66 +1,103 @@
-# Progresso
+# Progresso 💪
 
-Progresso 是一款離線優先的智慧健身容量追蹤器，面向需要追蹤漸進性超負荷、週容量與 RPE 疲勞訊號的中高階訓練者。
+**漸進性超負荷訓練日誌** — An offline-first workout tracker focused on progressive overload, weekly volume tracking, and muscle group analytics.
 
-## 技術棧
+---
 
-- Flutter 3.x + Dart 3.x
-- Riverpod 2.x
-- Drift + SQLite
-- Firebase Auth / Firestore / Analytics / Crashlytics 預留
-- go_router
-- fl_chart
-- freezed / json_serializable
-- flutter_local_notifications
-- wakelock_plus
+## 🚀 How to Run in the Browser
 
-## 專案結構
+### Prerequisites
 
-```text
-lib/
-├── main.dart
-├── app.dart
-├── core/
-│   ├── database/
-│   ├── router/
-│   ├── theme/
-│   ├── utils/
-│   └── constants/
-├── features/
-│   ├── workout/
-│   ├── analytics/
-│   ├── exercise_library/
-│   ├── history/
-│   ├── auth/
-│   └── settings/
-└── shared/
-    ├── widgets/
-    └── extensions/
-```
-
-## 啟動方式
-
-此專案需要本機已安裝 Flutter SDK。
+Make sure you have **Node.js** installed. Check with:
 
 ```bash
-flutter pub get
-dart run build_runner build --delete-conflicting-outputs
-flutter run
+node --version
 ```
 
-## 測試
+If not installed, download from [nodejs.org](https://nodejs.org).
+
+---
+
+### Step 1 — Clone the repo
 
 ```bash
-flutter test
+git clone https://github.com/Robshao/progresso-workout-tracker.git
+cd progresso-workout-tracker
 ```
 
-目前已建立容量計算、重量單位轉換、1RM 估算與減載建議的單元測試骨架。
+### Step 2 — Install dependencies
 
-## 開發規範摘要
+```bash
+cd progresso-vite
+npm install
+```
 
-- `presentation -> domain -> data` 單向依賴
-- `domain` 不 import Flutter / Drift / Firebase
-- 容量計算、減載演算法、1RM 估算維持純函式
-- 重量儲存原始數值與原始單位，計算前才轉 kg
-- 少於 3 週資料時不觸發減載警告
-- 訓練頁使用自訂數字鍵盤，不喚起系統鍵盤
+### Step 3 — Start the dev server
+
+```bash
+npm run dev
+```
+
+### Step 4 — Open in browser
+
+The terminal will show:
+
+```
+VITE ready in ~500ms
+➜  Local:   http://localhost:5173/
+```
+
+Open **http://localhost:5173/** in your browser. That's it — no login, no backend needed.
+
+---
+
+## 🛑 How to Stop the Server
+
+Press `Ctrl + C` in the terminal.
+
+---
+
+## 📦 Build for Production
+
+To generate a static site you can host anywhere:
+
+```bash
+cd progresso-vite
+npm run build
+```
+
+Output goes to `progresso-vite/dist/`. You can drag this folder into [Netlify](https://netlify.com) or [Vercel](https://vercel.com) for free hosting.
+
+---
+
+## 📱 App Pages
+
+| Route | Page | Description |
+|-------|------|-------------|
+| `/workout` | 訓練首頁 | Start a workout, see weekly summary & recent history |
+| `/workout/active` | 進行中訓練 | Log sets, weights, reps in real time |
+| `/history` | 訓練記錄 | Full workout history with expandable set detail |
+| `/analytics` | 分析 | Weekly volume chart, muscle group breakdown |
+| `/exercises` | 動作庫 | Searchable exercise library with group filters |
+| `/settings` | 設定 | Clear local data, app info |
+
+---
+
+## 🗄️ Data Storage
+
+All data is saved **locally in your browser** via IndexedDB (Dexie.js). Nothing is sent to any server — works fully offline.
+
+> ⚠️ Clearing browser data or using a different browser will not carry over your workout history.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Vite + React 19 + TypeScript |
+| Routing | React Router v7 |
+| Styling | Tailwind CSS v4 + CSS variables |
+| Icons | Lucide React |
+| Database | Dexie.js (IndexedDB wrapper) |
+| Storage | Browser-local, offline-first |
