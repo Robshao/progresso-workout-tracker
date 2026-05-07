@@ -12,13 +12,14 @@
  * The RestTimerOverlay (position:fixed) appears above everything.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../../lib/db/database'
 import type { SetType } from '../../lib/db/database'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useRestTimer } from '../../hooks/useRestTimer'
 import { useHaptics } from '../../hooks/useHaptics'
+import { useSessionVolumePR } from '../../hooks/useSessionVolumePR'
 import { RestTimerOverlay } from '../../components/workout/RestTimerOverlay'
 import { ExerciseBlockCard } from '../../components/workout/ExerciseBlockCard'
 import {
@@ -39,6 +40,10 @@ export default function ActiveWorkoutPage() {
   const [blocks, setBlocks]       = useState<ExerciseBlock[]>([])
   const [showPicker, setShowPicker] = useState(false)
   const [query, setQuery]         = useState('')
+  const [flashGreen, setFlashGreen] = useState(false)
+
+  const allTimeBestVolume = useSessionVolumePR()
+  const volumePRFiredRef  = useRef(false)   // one-shot guard — fire haptic only on first transition
 
   /* ── Session clock ──────────────────────────────────────────── */
   useEffect(() => {
@@ -60,6 +65,23 @@ export default function ActiveWorkoutPage() {
       .reduce((s2, x) => s2 + (parseFloat(x.weight)||0) * (parseFloat(x.reps)||0), 0),
     0,
   )
+
+  /* ── NFGU derived state ────────────────────────────────────── */
+  const isVolumePR = totalVolume > 0 && allTimeBestVolume > 0 && totalVolume > allTimeBestVolume
+  const hasHighRPE = blocks.some(b =>
+    b.sets.some(s => s.done && s.rir !== '' && parseInt(s.rir, 10) <= 1)
+  )
+
+  /* ── Volume PR one-shot haptic + flash ──────────────────────── */
+  useEffect(() => {
+    if (isVolumePR && !volumePRFiredRef.current) {
+      volumePRFiredRef.current = true
+      haptic.volumePR()
+      // Brief fluorescent green flash class on root
+      setFlashGreen(true)
+      setTimeout(() => setFlashGreen(false), 650)
+    }
+  }, [isVolumePR, haptic])
 
   /* ── Save ───────────────────────────────────────────────────── */
   async function handleFinish() {
@@ -127,13 +149,20 @@ export default function ActiveWorkoutPage() {
   const filtered = EXERCISES.filter(e => e.name.includes(query) || e.group.includes(query))
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%', background:'var(--bg)' }}>
+    <div
+      className={[
+        isVolumePR ? 'nfgu-volume-pr' : '',
+        flashGreen  ? 'nfgu-volume-pr-flash' : '',
+      ].filter(Boolean).join(' ') || undefined}
+      style={{ display:'flex', flexDirection:'column', height:'100%', background:'var(--bg)' }}
+    >
 
       {/* ── Focus-mode rest timer overlay ────────────────────── */}
       {restTimer.isResting && restTimer.restSec !== null && (
         <RestTimerOverlay
           restSec={restTimer.restSec}
           totalSec={DEFAULT_REST_SEC}
+          hasHighRPE={hasHighRPE}
           onDismiss={restTimer.dismiss}
         />
       )}
@@ -190,6 +219,7 @@ export default function ActiveWorkoutPage() {
             block={block}
             blockIndex={bi}
             loc={loc}
+            isVolumePR={isVolumePR}
             onUpdateSet={(si, field, val) => updateSet(bi, si, field as keyof SetEntry | 'repsUnit', val)}
             onAddSet={() => addSet(bi)}
             onRemoveBlock={() => removeBlock(bi)}

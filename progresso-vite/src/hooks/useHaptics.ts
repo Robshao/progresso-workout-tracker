@@ -21,20 +21,26 @@ function fire(pattern: number | number[]) {
 
 export interface HapticController {
   /** Light tap — regular key press or toggle */
-  keypress: () => void
+  keypress:  () => void
   /** Short burst — set marked complete (not a PR) */
-  setDone:  () => void
-  /** Double heavy impact — Personal Record achieved */
-  pr:       () => void
+  setDone:   () => void
+  /** Double heavy impact — single-exercise weight PR */
+  pr:        () => void
   /** Abort / destructive action */
-  abort:    () => void
+  abort:     () => void
+  /**
+   * Volume PR — 500ms total, two heavy metal-collision impacts then resonance.
+   * "crack + boom" pattern mimics a barbell dropping on a platform.
+   */
+  volumePR:  () => void
 }
 
 export function useHaptics(): HapticController {
   return {
-    keypress: () => fire(8),
-    setDone:  () => fire([15, 8, 30]),
-    pr:       () => fire([40, 60, 40, 60, 80]),   // plate-clang pattern
-    abort:    () => fire([30, 20, 30]),
+    keypress:  () => fire(8),
+    setDone:   () => fire([15, 8, 30]),
+    pr:        () => fire([40, 60, 40, 60, 80]),
+    abort:     () => fire([30, 20, 30]),
+    volumePR:  () => fire([60, 30, 500]),   // crack → brief silence → 500ms roar
   }
 }
