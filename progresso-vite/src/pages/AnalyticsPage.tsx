@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
-import { TrendingUp, Dumbbell, Zap, Calendar } from 'lucide-react'
 import { db, type SavedWorkout } from '../lib/db/database'
 
 function weekLabel(date: Date) {
   const d = new Date(date)
   const dow = (d.getDay() + 6) % 7
   d.setDate(d.getDate() - dow)
-  return `${d.getMonth() + 1}/${d.getDate()}`
+  return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`
 }
 
 export default function AnalyticsPage() {
@@ -16,108 +15,149 @@ export default function AnalyticsPage() {
     db.workouts.orderBy('startedAt').reverse().toArray().then(setWorkouts)
   }, [])
 
-  // Compute per-week volume for last 6 weeks
+  /* Weekly data — last 6 weeks */
   const weeklyData = (() => {
-    const weeks: { label: string; volume: number; count: number }[] = []
     const now = new Date()
-    for (let i = 5; i >= 0; i--) {
-      const weekStart = new Date(now)
-      const dow = (weekStart.getDay() + 6) % 7
-      weekStart.setDate(weekStart.getDate() - dow - i * 7)
-      weekStart.setHours(0, 0, 0, 0)
-      const weekEnd = new Date(weekStart)
-      weekEnd.setDate(weekStart.getDate() + 7)
-      const inWeek = workouts.filter(w => w.startedAt >= weekStart.getTime() && w.startedAt < weekEnd.getTime())
-      weeks.push({
-        label: weekLabel(weekStart),
-        volume: inWeek.reduce((s, w) => s + w.totalVolume, 0),
-        count: inWeek.length,
-      })
-    }
-    return weeks
+    return Array.from({ length: 6 }, (_, i) => {
+      const ws = new Date(now)
+      const dow = (ws.getDay() + 6) % 7
+      ws.setDate(ws.getDate() - dow - (5 - i) * 7)
+      ws.setHours(0,0,0,0)
+      const we = new Date(ws); we.setDate(ws.getDate() + 7)
+      const wk = workouts.filter(w => w.startedAt >= ws.getTime() && w.startedAt < we.getTime())
+      return {
+        label: weekLabel(ws),
+        volume: wk.reduce((s,w) => s + w.totalVolume, 0),
+        count: wk.length,
+        isCurrent: i === 5,
+      }
+    })
   })()
-
   const maxVol = Math.max(...weeklyData.map(w => w.volume), 1)
 
-  // Group breakdown
+  /* Muscle group breakdown */
   const groupMap: Record<string, number> = {}
   workouts.forEach(w => w.exercises.forEach(ex => {
     groupMap[ex.group] = (groupMap[ex.group] || 0) + ex.sets.filter(s => s.done).length
   }))
-  const groups = Object.entries(groupMap).sort((a, b) => b[1] - a[1])
-  const totalGroupSets = groups.reduce((s, [, v]) => s + v, 0)
+  const groups = Object.entries(groupMap).sort((a,b) => b[1]-a[1])
+  const totalGroupSets = groups.reduce((s,[,v]) => s+v, 0)
 
-  const totalVolume = workouts.reduce((s, w) => s + w.totalVolume, 0)
-  const totalSets = workouts.reduce((s, w) => s + w.totalSets, 0)
-  const avgDuration = workouts.length ? Math.round(workouts.reduce((s, w) => s + w.durationSec, 0) / workouts.length / 60) : 0
+  const totalVolume = workouts.reduce((s,w) => s+w.totalVolume, 0)
+  const totalSets   = workouts.reduce((s,w) => s+w.totalSets, 0)
+  const avgDuration = workouts.length
+    ? Math.round(workouts.reduce((s,w) => s+w.durationSec, 0) / workouts.length / 60)
+    : 0
 
   return (
-    <div className="flex flex-col gap-6 p-4">
-      <div className="pt-2">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>訓練分析</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>全部時間總覽</p>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+
+      {/* Header */}
+      <div className="steel" style={{ padding: '20px 16px 16px', borderBottom: '3px solid var(--primary)', flexShrink: 0 }}>
+        <h1 style={{ fontFamily: 'var(--font-brutal)', fontSize: '30px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
+          IRON STATS
+        </h1>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.08em' }}>
+          // ALL-TIME PERFORMANCE DATA
+        </p>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { icon: <Calendar size={18}/>, label: '訓練次數', value: `${workouts.length} 次` },
-          { icon: <Zap size={18}/>, label: '總訓練量', value: totalVolume > 0 ? `${(totalVolume / 1000).toFixed(1)} t` : '—' },
-          { icon: <Dumbbell size={18}/>, label: '總組數', value: `${totalSets} 組` },
-          { icon: <TrendingUp size={18}/>, label: '平均時長', value: avgDuration ? `${avgDuration} 分` : '—' },
-        ].map(({ icon, label, value }) => (
-          <div key={label} className="rounded-xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <span style={{ color: 'var(--primary)' }}>{icon}</span>
-            <p className="mt-2 text-lg font-bold" style={{ color: 'var(--text)' }}>{value}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
-          </div>
-        ))}
-      </div>
+      <div className="brutal-rule"/>
 
-      {/* Weekly volume chart */}
-      <section>
-        <h2 className="mb-3 text-base font-semibold" style={{ color: 'var(--text)' }}>每週訓練量</h2>
-        <div className="rounded-xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <div className="flex items-end gap-2 h-32">
-            {weeklyData.map((w, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <div className="w-full flex items-end justify-center" style={{ height: '100px' }}>
-                  <div className="w-full rounded-t-md transition-all"
-                    style={{
-                      height: `${Math.max((w.volume / maxVol) * 100, w.volume > 0 ? 4 : 0)}%`,
-                      background: i === 5 ? 'var(--primary)' : 'var(--surface-variant)',
-                      minHeight: w.volume > 0 ? '4px' : '0',
-                    }}/>
-                </div>
-                <span className="text-xs" style={{ color: i === 5 ? 'var(--primary)' : 'var(--text-muted)' }}>{w.label}</span>
-              </div>
-            ))}
-          </div>
-          {workouts.length === 0 && (
-            <p className="text-center text-sm mt-2" style={{ color: 'var(--text-muted)' }}>尚無資料</p>
-          )}
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+        {/* Summary stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2px' }}>
+          {[
+            { label: 'SESSIONS',    val: `${workouts.length}` },
+            { label: 'TOTAL IRON',  val: totalVolume > 0 ? `${(totalVolume/1000).toFixed(1)}T` : '—' },
+            { label: 'TOTAL SETS',  val: `${totalSets}` },
+            { label: 'AVG SESSION', val: avgDuration ? `${avgDuration}M` : '—' },
+          ].map(({ label, val }) => (
+            <div key={label} style={{
+              background: 'var(--surface)',
+              border: '2px solid var(--border)',
+              borderTop: '3px solid var(--border-heavy)',
+              padding: '14px 12px',
+            }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '28px', color: 'var(--primary)', fontWeight: 700, lineHeight: 1 }}>{val}</p>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', marginTop: '6px', letterSpacing: '0.1em' }}>{label}</p>
+            </div>
+          ))}
         </div>
-      </section>
 
-      {/* Muscle group breakdown */}
-      {groups.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-base font-semibold" style={{ color: 'var(--text)' }}>肌群分佈</h2>
-          <div className="rounded-xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-            {groups.map(([group, sets], i) => (
-              <div key={group} className="px-4 py-3 border-t first:border-t-0" style={{ borderColor: 'var(--border)' }}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{group}</span>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{sets} 組</span>
+        {/* Weekly volume chart */}
+        <div>
+          <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: '10px' }}>
+            ▸ WEEKLY VOLUME
+          </p>
+          <div style={{
+            border: '2px solid var(--border)',
+            borderLeft: '3px solid var(--primary)',
+            background: 'var(--surface)',
+            padding: '16px 12px 10px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '100px' }}>
+              {weeklyData.map((w, i) => (
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%' }}>
+                  <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end' }}>
+                    <div style={{
+                      width: '100%',
+                      height: `${Math.max((w.volume / maxVol) * 100, w.volume > 0 ? 6 : 0)}%`,
+                      background: w.isCurrent ? 'var(--primary)' : 'var(--border-heavy)',
+                      minHeight: w.volume > 0 ? '4px' : '2px',
+                      borderTop: w.isCurrent ? '2px solid #ff4444' : '2px solid var(--border-heavy)',
+                      boxShadow: w.isCurrent ? '0 0 8px var(--primary-dim)' : 'none',
+                    }}/>
+                  </div>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '8px',
+                    color: w.isCurrent ? 'var(--primary)' : 'var(--text-muted)',
+                    letterSpacing: '0.05em',
+                  }}>{w.label}</span>
                 </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-variant)' }}>
-                  <div className="h-full rounded-full" style={{ width: `${(sets / totalGroupSets) * 100}%`, background: 'var(--primary)' }}/>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            {workouts.length === 0 && (
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '8px' }}>
+                &gt; NO DATA_
+              </p>
+            )}
           </div>
-        </section>
-      )}
+        </div>
+
+        {/* Muscle group breakdown */}
+        {groups.length > 0 && (
+          <div>
+            <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: '10px' }}>
+              ▸ MUSCLE LOAD DISTRIBUTION
+            </p>
+            <div style={{ border: '2px solid var(--border)', background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {groups.map(([group, sets], i) => (
+                <div key={group} style={{
+                  padding: '10px 14px',
+                  borderTop: i > 0 ? '1px solid var(--border)' : undefined,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', color: 'var(--text)', letterSpacing: '0.06em' }}>{group}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--primary)' }}>{sets} SETS</span>
+                  </div>
+                  {/* Rebar progress bar */}
+                  <div style={{ height: '6px', background: 'var(--surface-variant)', border: '1px solid var(--border)' }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${(sets / totalGroupSets) * 100}%`,
+                      background: 'var(--primary)',
+                      boxShadow: '0 0 6px var(--primary-dim)',
+                    }}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

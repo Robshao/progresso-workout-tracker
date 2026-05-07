@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Dumbbell, Clock, Zap, ChevronDown } from 'lucide-react'
 import { db, type SavedWorkout } from '../lib/db/database'
 
-function formatDuration(sec: number) {
+function fmtDuration(sec: number) {
   const m = Math.floor(sec / 60)
-  return m < 60 ? `${m} 分鐘` : `${Math.floor(m / 60)} 時 ${m % 60} 分`
+  return m < 60 ? `${m}MIN` : `${Math.floor(m/60)}H${m%60}M`
 }
-function formatDate(ts: number) {
-  return new Date(ts).toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'short' })
+function fmtDate(ts: number) {
+  return new Date(ts).toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', weekday: 'short' }).toUpperCase()
 }
-function formatTime(ts: number) {
-  return new Date(ts).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+function fmtTime(ts: number) {
+  return new Date(ts).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
 export default function HistoryPage() {
@@ -22,94 +21,103 @@ export default function HistoryPage() {
   }, [])
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="pt-2">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>訓練記錄</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>共 {workouts.length} 次訓練</p>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header */}
+      <div className="steel" style={{ padding: '20px 16px 16px', borderBottom: '3px solid var(--primary)', flexShrink: 0 }}>
+        <h1 style={{ fontFamily: 'var(--font-brutal)', fontSize: '30px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
+          IRON LOG
+        </h1>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.08em' }}>
+          // {workouts.length} SESSION{workouts.length !== 1 ? 'S' : ''} RECORDED
+        </p>
       </div>
 
-      {workouts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border py-20"
-          style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <Dumbbell size={48} style={{ color: 'var(--text-muted)' }} />
-          <p className="mt-4 text-sm" style={{ color: 'var(--text-muted)' }}>尚無訓練記錄</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {workouts.map(w => (
-            <div key={w.id} className="rounded-xl border overflow-hidden"
-              style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-              {/* Summary row */}
-              <button className="flex w-full items-center justify-between px-4 py-3 text-left"
-                onClick={() => setExpanded(e => e === w.id ? null : w.id)}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-                    {formatDate(w.startedAt)}
-                  </p>
-                  <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
-                    {w.exercises.map(e => e.name).join('、') || '空訓練'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0 ml-3">
-                  <div className="text-right">
-                    <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>
-                      {w.totalVolume > 0 ? `${w.totalVolume.toFixed(0)} kg` : '—'}
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{w.totalSets} 組</p>
-                  </div>
-                  <ChevronDown size={16} style={{ color: 'var(--text-muted)', transform: expanded === w.id ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s' }}/>
-                </div>
-              </button>
+      <div className="brutal-rule" />
 
-              {/* Stats bar */}
-              <div className="flex gap-4 px-4 py-2 border-t" style={{ borderColor: 'var(--border)', background: 'var(--surface-variant)' }}>
-                <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-                  <Clock size={12}/>{formatTime(w.startedAt)} · {formatDuration(w.durationSec)}
-                </span>
-                <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-                  <Dumbbell size={12}/>{w.exercises.length} 動作
-                </span>
-                {w.totalVolume > 0 && (
-                  <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-                    <Zap size={12}/>{w.totalVolume.toFixed(0)} kg
-                  </span>
-                )}
+      {/* List */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {workouts.length === 0 ? (
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '60px 20px', textAlign: 'center',
+            border: '2px solid var(--border)', borderLeft: '4px solid var(--text-dim)',
+          }}>
+            <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '48px', color: 'var(--text-dim)' }}>☠</p>
+            <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '18px', color: 'var(--text-muted)', marginTop: '12px' }}>NO SESSIONS LOGGED</p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>&gt; BEGIN YOUR FIRST SESSION_</p>
+          </div>
+        ) : workouts.map(w => (
+          <div key={w.id} style={{ border: '2px solid var(--border)', borderLeft: '4px solid var(--primary)', background: 'var(--surface)' }}>
+            {/* Summary row */}
+            <button
+              onClick={() => setExpanded(e => e === w.id ? null : w.id)}
+              style={{
+                display: 'flex', width: '100%', alignItems: 'center',
+                justifyContent: 'space-between', padding: '12px 14px',
+                background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
+              }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  fontFamily: 'var(--font-brutal)', fontSize: '15px',
+                  color: 'var(--text)', letterSpacing: '0.04em',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {w.exercises.map(e => e.name).join(' · ') || 'EMPTY SESSION'}
+                </p>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  {fmtDate(w.startedAt)} ╱ {fmtTime(w.startedAt)} ╱ {fmtDuration(w.durationSec)}
+                </p>
               </div>
+              <div style={{ marginLeft: '12px', textAlign: 'right', flexShrink: 0 }}>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', color: 'var(--primary)', fontWeight: 700 }}>
+                  {w.totalVolume > 0 ? w.totalVolume.toFixed(0) : '—'}
+                </p>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)' }}>
+                  KG ╱ {w.totalSets} SETS
+                </p>
+              </div>
+              <span style={{
+                marginLeft: '10px', fontFamily: 'var(--font-mono)', fontSize: '12px',
+                color: 'var(--primary)',
+                transform: expanded === w.id ? 'rotate(180deg)' : 'none',
+                display: 'inline-block', transition: 'transform 0.15s',
+              }}>▼</span>
+            </button>
 
-              {/* Expanded detail */}
-              {expanded === w.id && (
-                <div className="border-t" style={{ borderColor: 'var(--border)' }}>
-                  {w.exercises.map((ex, ei) => (
-                    <div key={ei} className="px-4 py-3 border-t first:border-t-0" style={{ borderColor: 'var(--border)' }}>
-                      <p className="text-sm font-semibold mb-2" style={{ color: 'var(--text)' }}>
-                        {ex.name}
-                        <span className="ml-2 text-xs font-normal" style={{ color: 'var(--text-muted)' }}>
-                          {ex.equipment} · {ex.group}
-                        </span>
-                      </p>
-                      <div className="flex flex-col gap-1">
-                        {ex.sets.map((s, si) => (
-                          <div key={si} className="flex items-center gap-3 text-sm">
-                            <span className="w-5 text-center text-xs" style={{ color: 'var(--text-muted)' }}>{si + 1}</span>
-                            <span style={{ color: s.done ? 'var(--text)' : 'var(--text-muted)' }}>
-                              {s.weight ? `${s.weight} kg` : '—'}
-                            </span>
-                            <span style={{ color: 'var(--text-muted)' }}>×</span>
-                            <span style={{ color: s.done ? 'var(--text)' : 'var(--text-muted)' }}>
-                              {s.reps || '—'} {s.repsUnit}
-                            </span>
-                            {s.done && <span className="ml-auto text-xs" style={{ color: 'var(--primary)' }}>✓</span>}
-                          </div>
-                        ))}
+            {/* Expanded detail */}
+            {expanded === w.id && (
+              <div style={{ borderTop: '2px solid var(--border)' }}>
+                {w.exercises.map((ex, ei) => (
+                  <div key={ei} style={{ padding: '12px 14px', borderTop: ei > 0 ? '1px solid var(--border)' : undefined }}>
+                    <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', color: 'var(--primary)', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                      ▸ {ex.name}
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginLeft: '8px', fontFamily: 'var(--font-mono)' }}>
+                        [{ex.equipment} ╱ {ex.group}]
+                      </span>
+                    </p>
+                    {ex.sets.map((s, si) => (
+                      <div key={si} style={{
+                        display: 'flex', alignItems: 'center', gap: '12px',
+                        padding: '4px 0',
+                        fontFamily: 'var(--font-mono)', fontSize: '13px',
+                        borderBottom: '1px solid var(--border)',
+                        color: s.done ? 'var(--text)' : 'var(--text-muted)',
+                      }}>
+                        <span style={{ width: '20px', color: 'var(--text-muted)', fontSize: '11px' }}>{si+1}</span>
+                        <span>{s.weight || '—'} KG</span>
+                        <span style={{ color: 'var(--text-dim)' }}>×</span>
+                        <span>{s.reps || '—'} {s.repsUnit}</span>
+                        {s.done && <span style={{ marginLeft: 'auto', color: 'var(--primary)', fontSize: '11px' }}>■ DONE</span>}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

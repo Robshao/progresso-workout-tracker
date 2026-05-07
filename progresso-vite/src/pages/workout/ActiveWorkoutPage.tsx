@@ -1,34 +1,46 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, Plus, CheckCircle, ChevronDown, Search, Trash2 } from 'lucide-react'
 import { db } from '../../lib/db/database'
 
 const EXERCISES = [
-  { id: 1, name: '槓鈴臥推', equipment: '槓鈴', group: '胸' },
-  { id: 2, name: '上斜臥推', equipment: '啞鈴', group: '胸' },
-  { id: 3, name: '槓鈴深蹲', equipment: '槓鈴', group: '腿' },
-  { id: 4, name: '腿推機', equipment: '機械', group: '腿' },
-  { id: 5, name: '硬舉', equipment: '槓鈴', group: '背' },
-  { id: 6, name: '引體向上', equipment: '自體重量', group: '背' },
-  { id: 7, name: '坐姿划船', equipment: '機械', group: '背' },
-  { id: 8, name: '肩推', equipment: '啞鈴', group: '肩' },
-  { id: 9, name: '側平舉', equipment: '啞鈴', group: '肩' },
-  { id: 10, name: '二頭彎舉', equipment: '啞鈴', group: '手臂' },
-  { id: 11, name: '三頭下壓', equipment: '繩索', group: '手臂' },
-  { id: 12, name: '平板支撐', equipment: '自體重量', group: '核心' },
+  { id: 1,  name: '槓鈴臥推', equipment: '槓鈴',   group: '胸'  },
+  { id: 2,  name: '上斜臥推', equipment: '啞鈴',   group: '胸'  },
+  { id: 3,  name: '槓鈴深蹲', equipment: '槓鈴',   group: '腿'  },
+  { id: 4,  name: '腿推機',   equipment: '機械',   group: '腿'  },
+  { id: 5,  name: '硬舉',     equipment: '槓鈴',   group: '背'  },
+  { id: 6,  name: '引體向上', equipment: '自體重量', group: '背' },
+  { id: 7,  name: '坐姿划船', equipment: '機械',   group: '背'  },
+  { id: 8,  name: '肩推',     equipment: '啞鈴',   group: '肩'  },
+  { id: 9,  name: '側平舉',   equipment: '啞鈴',   group: '肩'  },
+  { id: 10, name: '二頭彎舉', equipment: '啞鈴',   group: '手臂'},
+  { id: 11, name: '三頭下壓', equipment: '繩索',   group: '手臂'},
+  { id: 12, name: '平板支撐', equipment: '自體重量', group: '核心'},
 ]
 
 type RepsUnit = '次' | '秒' | '分' | '時'
 const REPS_UNITS: RepsUnit[] = ['次', '秒', '分', '時']
 
-interface SetEntry { weight: string; reps: string; done: boolean }
+interface SetEntry    { weight: string; reps: string; done: boolean }
 interface ExerciseBlock { exercise: typeof EXERCISES[0]; sets: SetEntry[]; repsUnit: RepsUnit }
 
+/* ── Input style ──────────────────────────────────────────────── */
+const inputSty: React.CSSProperties = {
+  background: 'var(--bg)',
+  border: '2px solid var(--border-heavy)',
+  color: 'var(--text)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: '16px',
+  textAlign: 'center',
+  padding: '10px 4px',
+  width: '100%',
+  outline: 'none',
+}
+
 export default function ActiveWorkoutPage() {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
   const [elapsed, setElapsed] = useState(0)
   const [startTime] = useState(() => Date.now())
-  const [blocks, setBlocks] = useState<ExerciseBlock[]>([])
+  const [blocks, setBlocks]   = useState<ExerciseBlock[]>([])
   const [showPicker, setShowPicker] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -37,25 +49,28 @@ export default function ActiveWorkoutPage() {
     return () => clearInterval(t)
   }, [startTime])
 
-  const fmt = (s: number) => [Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(n=>String(n).padStart(2,'0')).join(':')
+  const fmt = (s: number) =>
+    [Math.floor(s/3600), Math.floor((s%3600)/60), s%60]
+      .map(n => String(n).padStart(2,'0')).join(':')
 
-  const totalSets = blocks.reduce((s,b) => s + b.sets.filter(x=>x.done).length, 0)
-  const totalVolume = blocks.reduce((s,b) => s + b.sets.filter(x=>x.done && b.repsUnit==='次').reduce((s2,x) => s2+(parseFloat(x.weight)||0)*(parseFloat(x.reps)||0),0), 0)
+  const totalSets   = blocks.reduce((s, b) => s + b.sets.filter(x => x.done).length, 0)
+  const totalVolume = blocks.reduce((s, b) =>
+    s + b.sets
+      .filter(x => x.done && b.repsUnit === '次')
+      .reduce((s2, x) => s2 + (parseFloat(x.weight)||0)*(parseFloat(x.reps)||0), 0), 0)
 
   async function handleFinish() {
-    if (!confirm('完成訓練？記錄將被儲存。')) return
+    if (!confirm('// FINALIZE SESSION? DATA WILL BE FORGED INTO THE LOG.')) return
     const endedAt = Date.now()
     await db.workouts.add({
-      id: crypto.randomUUID(),
-      startedAt: startTime,
-      endedAt,
+      id: crypto.randomUUID(), startedAt: startTime, endedAt,
       durationSec: Math.floor((endedAt - startTime) / 1000),
       exercises: blocks.map(b => ({
-        name: b.exercise.name, group: b.exercise.group, equipment: b.exercise.equipment, repsUnit: b.repsUnit,
-        sets: b.sets.map(s => ({ weight: s.weight, reps: s.reps, repsUnit: b.repsUnit, done: s.done })),
+        name: b.exercise.name, group: b.exercise.group,
+        equipment: b.exercise.equipment, repsUnit: b.repsUnit,
+        sets: b.sets.map(s => ({ ...s, repsUnit: b.repsUnit })),
       })),
-      totalVolume,
-      totalSets,
+      totalVolume, totalSets,
     })
     navigate('/workout')
   }
@@ -64,131 +79,357 @@ export default function ActiveWorkoutPage() {
     setBlocks(p => [...p, { exercise: ex, sets: [{ weight:'', reps:'', done:false }], repsUnit: '次' }])
     setShowPicker(false); setQuery('')
   }
-
   function addSet(bi: number) {
-    setBlocks(p => p.map((b,i) => i!==bi ? b : { ...b, sets: [...b.sets, { weight: b.sets.at(-1)!.weight, reps: b.sets.at(-1)!.reps, done: false }] }))
+    setBlocks(p => p.map((b,i) => i!==bi ? b : {
+      ...b,
+      sets: [...b.sets, { weight: b.sets.at(-1)!.weight, reps: b.sets.at(-1)!.reps, done: false }],
+    }))
   }
-
   function updateSet(bi: number, si: number, field: keyof SetEntry, val: string|boolean) {
-    setBlocks(p => p.map((b,i) => i!==bi ? b : { ...b, sets: b.sets.map((s,j) => j!==si ? s : { ...s, [field]: val }) }))
+    setBlocks(p => p.map((b,i) => i!==bi ? b : {
+      ...b,
+      sets: b.sets.map((s,j) => j!==si ? s : { ...s, [field]: val }),
+    }))
   }
 
-  const filtered = EXERCISES.filter(e => e.name.includes(query)||e.group.includes(query))
+  const filtered = EXERCISES.filter(e => e.name.includes(query) || e.group.includes(query))
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0" style={{ background:'var(--surface)', borderColor:'var(--border)' }}>
-        <button onClick={() => { if(confirm('放棄訓練？')) navigate('/workout') }} style={{ color:'var(--text-muted)' }}><X size={22}/></button>
-        <div className="text-center">
-          <p className="text-xs" style={{ color:'var(--text-muted)' }}>訓練進行中</p>
-          <p className="text-xl font-bold tabular-nums" style={{ color:'var(--primary)' }}>{fmt(elapsed)}</p>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg)' }}>
+
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="steel" style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 16px',
+        borderBottom: '3px solid var(--primary)',
+        flexShrink: 0,
+      }}>
+        <button
+          onClick={() => { if(confirm('// ABORT SESSION? PROGRESS LOST.')) navigate('/workout') }}
+          style={{
+            background: 'transparent',
+            border: '2px solid var(--border-heavy)',
+            color: 'var(--text-muted)',
+            fontFamily: 'var(--font-brutal)',
+            fontSize: '13px',
+            letterSpacing: '0.08em',
+            padding: '8px 12px',
+            cursor: 'pointer',
+          }}>
+          ✕ ABORT
+        </button>
+
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.12em' }}>
+            SESSION LIVE
+          </p>
+          <p style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '28px',
+            color: 'var(--primary)',
+            letterSpacing: '0.05em',
+            lineHeight: 1.1,
+          }}>{fmt(elapsed)}</p>
         </div>
-        <button onClick={handleFinish} className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold" style={{ background:'var(--primary)', color:'#000' }}>
-          <CheckCircle size={16}/>完成
+
+        <button onClick={handleFinish} style={{
+          background: 'var(--primary)',
+          border: '2px solid var(--primary)',
+          boxShadow: '3px 3px 0 var(--primary-dark)',
+          color: '#000',
+          fontFamily: 'var(--font-brutal)',
+          fontSize: '14px',
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          padding: '10px 14px',
+          cursor: 'pointer',
+        }}>
+          ■ LOCK IN
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="flex justify-around py-2 border-b shrink-0" style={{ background:'var(--surface-variant)', borderColor:'var(--border)' }}>
-        {[['總容量', totalVolume>0?`${totalVolume.toFixed(0)} kg`:'— kg'],['完成組數',String(totalSets)],['動作數',String(blocks.length)]].map(([l,v])=>(
-          <div key={l} className="text-center">
-            <p className="text-xs" style={{ color:'var(--text-muted)' }}>{l}</p>
-            <p className="text-sm font-bold" style={{ color:'var(--text)' }}>{v}</p>
+      {/* ── Stats bar ──────────────────────────────────────── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '1px',
+        background: 'var(--border)',
+        borderBottom: '2px solid var(--border)',
+        flexShrink: 0,
+      }}>
+        {[
+          ['IRON MOVED', totalVolume > 0 ? `${totalVolume.toFixed(0)} KG` : '— KG'],
+          ['SETS DONE',  String(totalSets)],
+          ['MOVEMENTS',  String(blocks.length)],
+        ].map(([l, v]) => (
+          <div key={l} style={{
+            background: 'var(--surface-variant)',
+            padding: '8px 4px',
+            textAlign: 'center',
+          }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: 'var(--primary)', fontWeight: 700 }}>{v}</p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'var(--text-muted)', letterSpacing: '0.1em', marginTop: '2px' }}>{l}</p>
           </div>
         ))}
       </div>
 
-      {/* Exercise list */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      {/* ── Exercise blocks ────────────────────────────────── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {blocks.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-20">
-            <p className="text-sm text-center" style={{ color:'var(--text-muted)' }}>尚無動作<br/>點擊下方按鈕新增</p>
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '60px 20px', textAlign: 'center',
+            border: '2px solid var(--border)',
+            borderLeft: '4px solid var(--text-dim)',
+          }}>
+            <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '48px', color: 'var(--text-dim)' }}>☠</p>
+            <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '18px', color: 'var(--text-muted)', marginTop: '12px' }}>
+              NO MOVEMENTS LOADED
+            </p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+              &gt; ADD MOVEMENT BELOW_
+            </p>
           </div>
         ) : blocks.map((block, bi) => (
-          <div key={bi} className="rounded-xl border overflow-hidden" style={{ background:'var(--surface)', borderColor:'var(--border)' }}>
-            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor:'var(--border)' }}>
+          <div key={bi} style={{
+            border: '2px solid var(--border)',
+            borderTop: '3px solid var(--primary)',
+            background: 'var(--surface)',
+          }}>
+            {/* Exercise header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              borderBottom: '2px solid var(--border)',
+              background: 'var(--surface-variant)',
+            }}>
               <div>
-                <p className="font-semibold" style={{ color:'var(--text)' }}>{block.exercise.name}</p>
-                <p className="text-xs" style={{ color:'var(--text-muted)' }}>{block.exercise.equipment} · {block.exercise.group}</p>
+                <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '16px', color: 'var(--text)', letterSpacing: '0.05em' }}>
+                  {block.exercise.name}
+                </p>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                  {block.exercise.equipment} ╱ {block.exercise.group}
+                </p>
               </div>
-              <button onClick={() => setBlocks(p=>p.filter((_,i)=>i!==bi))} style={{ color:'var(--text-muted)' }}><Trash2 size={18}/></button>
+              <button
+                onClick={() => setBlocks(p => p.filter((_,i) => i!==bi))}
+                style={{
+                  background: 'transparent',
+                  border: '2px solid var(--border-heavy)',
+                  color: 'var(--primary)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '14px',
+                  padding: '6px 10px',
+                  cursor: 'pointer',
+                }}>✕</button>
             </div>
 
-            <div className="grid grid-cols-5 gap-2 px-4 py-2 text-xs font-medium items-center" style={{ color:'var(--text-muted)' }}>
-              <span>組</span>
-              <span className="col-span-2 text-center">重量 (kg)</span>
-              <div className="relative flex items-center justify-center">
-                <select value={block.repsUnit} onChange={e=>setBlocks(p=>p.map((b,i)=>i===bi?{...b,repsUnit:e.target.value as RepsUnit}:b))}
-                  className="appearance-none rounded-md px-2 py-1 text-xs font-semibold pr-5 outline-none cursor-pointer w-full"
-                  style={{ background:'var(--surface-variant)', color:'var(--primary)', border:'1px solid var(--border)' }}>
-                  {REPS_UNITS.map(u=><option key={u} value={u}>{u}</option>)}
+            {/* Column headers */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '28px 1fr 1fr 44px',
+              gap: '4px',
+              padding: '8px 14px',
+              borderBottom: '1px solid var(--border)',
+            }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>#</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.1em' }}>KG</span>
+              {/* Reps unit selector */}
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={block.repsUnit}
+                  onChange={e => setBlocks(p => p.map((b,i) => i===bi ? {...b, repsUnit: e.target.value as RepsUnit} : b))}
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg)',
+                    border: '2px solid var(--primary)',
+                    color: 'var(--primary)',
+                    fontFamily: 'var(--font-brutal)',
+                    fontSize: '11px',
+                    letterSpacing: '0.08em',
+                    padding: '3px 18px 3px 6px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}>
+                  {REPS_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
-                <ChevronDown size={10} className="absolute right-1 pointer-events-none" style={{ color:'var(--primary)' }}/>
+                <span style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', fontSize: '8px', pointerEvents: 'none' }}>▼</span>
               </div>
-              <span className="text-center">✓</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.1em' }}>✓</span>
             </div>
 
+            {/* Sets */}
             {block.sets.map((set, si) => (
-              <div key={si} className="grid grid-cols-5 gap-2 px-4 py-2 items-center border-t"
-                style={{ borderColor:'var(--border)', background: set.done?'rgba(0,230,118,0.06)':undefined }}>
-                <span className="text-sm font-medium" style={{ color:'var(--text-muted)' }}>{si+1}</span>
-                <input type="number" inputMode="decimal" placeholder="0" value={set.weight}
-                  onChange={e=>updateSet(bi,si,'weight',e.target.value)}
-                  className="col-span-2 rounded-lg px-3 py-2 text-center text-sm outline-none"
-                  style={{ background:'var(--surface-variant)', color:'var(--text)' }}/>
-                <input type="number" inputMode="decimal" placeholder={block.repsUnit} value={set.reps}
-                  onChange={e=>updateSet(bi,si,'reps',e.target.value)}
-                  className="rounded-lg px-2 py-2 text-center text-sm outline-none"
-                  style={{ background:'var(--surface-variant)', color:'var(--text)' }}/>
-                <button onClick={()=>updateSet(bi,si,'done',!set.done)}
-                  className="flex items-center justify-center rounded-lg py-2"
-                  style={{ background:set.done?'var(--primary)':'var(--surface-variant)', color:set.done?'#000':'var(--text-muted)' }}>
-                  <CheckCircle size={18}/>
+              <div key={si} style={{
+                display: 'grid',
+                gridTemplateColumns: '28px 1fr 1fr 44px',
+                gap: '4px',
+                padding: '6px 14px',
+                borderBottom: '1px solid var(--border)',
+                background: set.done ? 'rgba(204,17,17,0.07)' : undefined,
+                alignItems: 'center',
+              }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-muted)' }}>{si+1}</span>
+                <input
+                  type="number" inputMode="decimal" placeholder="0"
+                  value={set.weight}
+                  onChange={e => updateSet(bi, si, 'weight', e.target.value)}
+                  style={inputSty}
+                />
+                <input
+                  type="number" inputMode="decimal" placeholder={block.repsUnit}
+                  value={set.reps}
+                  onChange={e => updateSet(bi, si, 'reps', e.target.value)}
+                  style={inputSty}
+                />
+                <button
+                  onClick={() => updateSet(bi, si, 'done', !set.done)}
+                  style={{
+                    height: '40px',
+                    background: set.done ? 'var(--primary)' : 'var(--bg)',
+                    border: `2px solid ${set.done ? 'var(--primary)' : 'var(--border-heavy)'}`,
+                    color: set.done ? '#000' : 'var(--text-muted)',
+                    fontFamily: 'var(--font-brutal)',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    boxShadow: set.done ? '2px 2px 0 var(--primary-dark)' : 'none',
+                  }}>
+                  ■
                 </button>
               </div>
             ))}
 
-            <button onClick={()=>addSet(bi)} className="flex w-full items-center justify-center gap-1 py-3 text-sm border-t"
-              style={{ color:'var(--primary)', borderColor:'var(--border)' }}>
-              <Plus size={16}/>新增組數
+            {/* Add set */}
+            <button
+              onClick={() => addSet(bi)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'transparent',
+                border: 'none',
+                borderTop: '2px dashed var(--border-heavy)',
+                color: 'var(--primary)',
+                fontFamily: 'var(--font-brutal)',
+                fontSize: '13px',
+                letterSpacing: '0.1em',
+                cursor: 'pointer',
+              }}>
+              + ADD SET
             </button>
           </div>
         ))}
       </div>
 
-      {/* Add exercise button */}
-      <div className="shrink-0 p-4 border-t" style={{ borderColor:'var(--border)' }}>
-        <button onClick={()=>setShowPicker(true)} className="flex w-full items-center justify-center gap-2 rounded-xl py-4 text-base font-bold"
-          style={{ background:'var(--primary)', color:'#000' }}>
-          <Plus size={20}/>新增動作
+      {/* ── Add exercise CTA ───────────────────────────────── */}
+      <div style={{ flexShrink: 0, padding: '12px 16px', borderTop: '2px solid var(--border)' }}>
+        <button className="btn-brutal" onClick={() => setShowPicker(true)}>
+          + LOAD MOVEMENT
         </button>
       </div>
 
-      {/* Exercise picker */}
+      {/* ── Exercise Picker ────────────────────────────────── */}
       {showPicker && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          <div className="absolute inset-0 bg-black/60" onClick={()=>setShowPicker(false)}/>
-          <div className="relative flex flex-col rounded-t-2xl max-h-[80vh]" style={{ background:'var(--surface)' }}>
-            <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 rounded-full" style={{ background:'var(--border)' }}/></div>
-            <div className="flex items-center justify-between px-4 py-3">
-              <p className="text-base font-semibold" style={{ color:'var(--text)' }}>選擇動作</p>
-              <button onClick={()=>setShowPicker(false)} style={{ color:'var(--text-muted)' }}><X size={20}/></button>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          {/* Backdrop */}
+          <div
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)' }}
+            onClick={() => setShowPicker(false)}
+          />
+          {/* Sheet */}
+          <div style={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '80vh',
+            background: 'var(--surface)',
+            borderTop: '3px solid var(--primary)',
+          }}>
+            {/* Sheet header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 16px',
+              borderBottom: '2px solid var(--border)',
+              background: 'var(--surface-variant)',
+            }}>
+              <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '18px', letterSpacing: '0.08em', color: 'var(--text)' }}>
+                ▸ SELECT MOVEMENT
+              </p>
+              <button
+                onClick={() => setShowPicker(false)}
+                style={{
+                  background: 'transparent',
+                  border: '2px solid var(--border-heavy)',
+                  color: 'var(--text-muted)',
+                  fontFamily: 'var(--font-mono)',
+                  padding: '6px 10px',
+                  cursor: 'pointer',
+                }}>✕</button>
             </div>
-            <div className="flex items-center gap-3 mx-4 mb-3 rounded-xl px-4 py-3" style={{ background:'var(--surface-variant)' }}>
-              <Search size={16} style={{ color:'var(--text-muted)' }}/>
-              <input type="text" placeholder="搜尋動作..." value={query} onChange={e=>setQuery(e.target.value)} autoFocus
-                className="flex-1 bg-transparent text-sm outline-none" style={{ color:'var(--text)' }}/>
+
+            {/* Search */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              margin: '12px 16px',
+              background: 'var(--bg)',
+              border: '2px solid var(--border-heavy)',
+              padding: '10px 14px',
+            }}>
+              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--primary)', fontSize: '14px' }}>&gt;</span>
+              <input
+                type="text"
+                placeholder="SEARCH MOVEMENTS..."
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                autoFocus
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: 'var(--text)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '13px',
+                  letterSpacing: '0.05em',
+                }}
+              />
             </div>
-            <div className="overflow-y-auto pb-6">
+
+            {/* Exercise list */}
+            <div style={{ overflowY: 'auto', paddingBottom: '8px' }}>
               {filtered.map(ex => (
-                <button key={ex.id} onClick={()=>addExercise(ex)} className="flex w-full items-center justify-between px-4 py-3 text-left border-t"
-                  style={{ borderColor:'var(--border)' }}>
+                <button
+                  key={ex.id}
+                  onClick={() => addExercise(ex)}
+                  style={{
+                    display: 'flex',
+                    width: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: 'transparent',
+                    border: 'none',
+                    borderTop: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}>
                   <div>
-                    <p className="text-sm font-medium" style={{ color:'var(--text)' }}>{ex.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color:'var(--text-muted)' }}>{ex.equipment} · {ex.group}</p>
+                    <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '15px', color: 'var(--text)', letterSpacing: '0.04em' }}>
+                      {ex.name}
+                    </p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                      {ex.equipment} ╱ {ex.group}
+                    </p>
                   </div>
-                  <Plus size={18} style={{ color:'var(--primary)' }}/>
+                  <span style={{ fontFamily: 'var(--font-brutal)', fontSize: '20px', color: 'var(--primary)' }}>+</span>
                 </button>
               ))}
             </div>

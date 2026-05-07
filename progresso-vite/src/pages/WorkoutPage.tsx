@@ -1,20 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Dumbbell, Clock, Zap, ChevronRight } from 'lucide-react'
 import { db, type SavedWorkout } from '../lib/db/database'
 
-function formatDuration(sec: number) {
+function fmtDuration(sec: number) {
   const m = Math.floor(sec / 60)
-  return m < 60 ? `${m} 分鐘` : `${Math.floor(m / 60)} 時 ${m % 60} 分`
+  return m < 60 ? `${m}MIN` : `${Math.floor(m / 60)}H${m % 60}M`
 }
-function formatDate(ts: number) {
-  return new Date(ts).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric', weekday: 'short' })
+function fmtDate(ts: number) {
+  return new Date(ts).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric', weekday: 'short' }).toUpperCase()
 }
 
 export default function WorkoutPage() {
   const navigate = useNavigate()
   const [recent, setRecent] = useState<SavedWorkout[]>([])
-  const [weekVol, setWeekVol] = useState(0)
+  const [weekVol, setWeekVol]     = useState(0)
   const [weekCount, setWeekCount] = useState(0)
 
   useEffect(() => {
@@ -22,82 +21,176 @@ export default function WorkoutPage() {
       setRecent(all.slice(0, 5))
       const now = new Date()
       const dow = (now.getDay() + 6) % 7
-      const weekStart = new Date(now)
-      weekStart.setHours(0,0,0,0)
-      weekStart.setDate(now.getDate() - dow)
-      const thisWeek = all.filter(w => w.startedAt >= weekStart.getTime())
-      setWeekCount(thisWeek.length)
-      setWeekVol(thisWeek.reduce((s, w) => s + w.totalVolume, 0))
+      const ws  = new Date(now); ws.setHours(0,0,0,0); ws.setDate(now.getDate() - dow)
+      const wk  = all.filter(w => w.startedAt >= ws.getTime())
+      setWeekCount(wk.length)
+      setWeekVol(wk.reduce((s, w) => s + w.totalVolume, 0))
     })
   }, [])
 
   return (
-    <div className="flex flex-col gap-6 p-4">
-      <div className="pt-2">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>Progresso</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>漸進性超負荷訓練日誌</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, height: '100%', overflowY: 'auto' }}>
+
+      {/* ── Header ────────────────────────────────────────── */}
+      <div className="steel" style={{
+        padding: '20px 16px 16px',
+        borderBottom: '3px solid var(--primary)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+          {/* Skull barbell logo mark */}
+          <span style={{
+            fontFamily: 'var(--font-brutal)',
+            fontSize: '28px',
+            color: 'var(--primary)',
+            lineHeight: 1,
+          }}>☠</span>
+          <h1 style={{
+            fontFamily: 'var(--font-brutal)',
+            fontSize: '34px',
+            fontWeight: 700,
+            color: 'var(--primary)',
+            letterSpacing: '0.06em',
+          }}>PROGRESSO</h1>
+        </div>
+        <p style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '11px',
+          color: 'var(--text-muted)',
+          marginTop: '4px',
+          letterSpacing: '0.08em',
+        }}>// PROGRESSIVE OVERLOAD IRON TRACKER</p>
       </div>
 
-      <button onClick={() => navigate('/workout/active')} className="w-full rounded-2xl p-6 text-left"
-        style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))' }}>
-        <Dumbbell size={32} color="#000" />
-        <h2 className="mt-3 text-xl font-bold text-black">開始訓練</h2>
-        <p className="mt-1 text-sm" style={{ color: 'rgba(0,0,0,0.6)' }}>點擊立即開始記錄本次訓練</p>
-      </button>
+      {/* ── CTA Button ────────────────────────────────────── */}
+      <div style={{ padding: '16px', background: 'var(--bg)' }}>
+        <button className="btn-brutal" onClick={() => navigate('/workout/active')}>
+          <span style={{ fontSize: '22px', lineHeight: 1 }}>⚡</span>
+          <span>INITIATE SESSION</span>
+          <span style={{ fontSize: '22px', lineHeight: 1 }}>⚡</span>
+        </button>
+      </div>
 
-      <section>
-        <h2 className="mb-3 text-base font-semibold" style={{ color: 'var(--text)' }}>本週摘要</h2>
-        <div className="rounded-xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
-            <Stat icon={<Zap size={18}/>} label="總容量" value={weekVol > 0 ? weekVol.toFixed(0) : '—'} unit="kg"/>
-            <Stat icon={<Dumbbell size={18}/>} label="訓練次數" value={weekCount > 0 ? String(weekCount) : '—'} unit="次"/>
-            <Stat icon={<Clock size={18}/>} label="本週組數" value="—" unit=""/>
-          </div>
+      <div className="brutal-rule"/>
+
+      {/* ── This Week ─────────────────────────────────────── */}
+      <div style={{ padding: '16px', background: 'var(--surface-variant)' }}>
+        <p style={{
+          fontFamily: 'var(--font-brutal)',
+          fontSize: '13px',
+          letterSpacing: '0.15em',
+          color: 'var(--text-muted)',
+          marginBottom: '12px',
+        }}>▸ THIS WEEK</p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
+          {[
+            { label: 'TOTAL IRON',  val: weekVol > 0 ? weekVol.toFixed(0) : '—', unit: 'KG' },
+            { label: 'SESSIONS',    val: weekCount > 0 ? String(weekCount) : '—', unit: '' },
+            { label: 'THIS WEEK',   val: '—', unit: 'SETS' },
+          ].map(({ label, val, unit }) => (
+            <div key={label} style={{
+              background: 'var(--surface)',
+              border: '2px solid var(--border)',
+              borderTop: '3px solid var(--border-heavy)',
+              padding: '14px 10px',
+              textAlign: 'center',
+            }}>
+              <p style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '26px',
+                fontWeight: 700,
+                color: 'var(--primary)',
+                lineHeight: 1,
+              }}>{val}</p>
+              <p style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '9px',
+                color: 'var(--text-muted)',
+                marginTop: '6px',
+                letterSpacing: '0.1em',
+              }}>{unit ? `${unit} // ` : ''}{label}</p>
+            </div>
+          ))}
         </div>
-      </section>
+      </div>
 
-      <section>
-        <h2 className="mb-3 text-base font-semibold" style={{ color: 'var(--text)' }}>最近訓練</h2>
+      <div className="brutal-rule"/>
+
+      {/* ── Recent Iron ───────────────────────────────────── */}
+      <div style={{ padding: '16px', flex: 1 }}>
+        <p style={{
+          fontFamily: 'var(--font-brutal)',
+          fontSize: '13px',
+          letterSpacing: '0.15em',
+          color: 'var(--text-muted)',
+          marginBottom: '12px',
+        }}>▸ RECENT IRON</p>
+
         {recent.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border py-12" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <Dumbbell size={48} style={{ color: 'var(--text-muted)' }} />
-            <p className="mt-4 text-sm" style={{ color: 'var(--text-muted)' }}>尚無訓練記錄</p>
-            <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>開始第一次訓練吧！</p>
+          <div style={{
+            border: '2px solid var(--border)',
+            borderLeft: '4px solid var(--text-dim)',
+            padding: '32px 20px',
+            textAlign: 'center',
+            background: 'var(--surface)',
+          }}>
+            <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '32px', color: 'var(--text-dim)' }}>☠</p>
+            <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '16px', color: 'var(--text-muted)', marginTop: '8px' }}>
+              NO SESSIONS LOGGED
+            </p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+              &gt; BEGIN YOUR FIRST SESSION_
+            </p>
           </div>
         ) : (
-          <div className="rounded-xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-            {recent.map((w, i) => (
-              <div key={w.id} className="flex items-center justify-between px-4 py-3"
-                style={{ borderTop: i > 0 ? '1px solid var(--border)' : undefined }}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
-                    {w.exercises.map(e => e.name).join('、') || '空訓練'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {recent.map((w) => (
+              <div key={w.id} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 14px',
+                background: 'var(--surface)',
+                border: '2px solid var(--border)',
+                borderLeft: '4px solid var(--primary)',
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    fontFamily: 'var(--font-brutal)',
+                    fontSize: '14px',
+                    color: 'var(--text)',
+                    letterSpacing: '0.04em',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {w.exercises.map(e => e.name).join(' · ') || 'EMPTY SESSION'}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                    {formatDate(w.startedAt)} · {formatDuration(w.durationSec)} · {w.totalSets} 組
+                  <p style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '10px',
+                    color: 'var(--text-muted)',
+                    marginTop: '4px',
+                  }}>
+                    {fmtDate(w.startedAt)} ╱ {fmtDuration(w.durationSec)} ╱ {w.totalSets} SETS
                   </p>
                 </div>
-                <div className="flex items-center gap-1 shrink-0 ml-2">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--primary)' }}>
-                    {w.totalVolume > 0 ? `${w.totalVolume.toFixed(0)} kg` : '—'}
+                <div style={{ marginLeft: '12px', textAlign: 'right', flexShrink: 0 }}>
+                  <p style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: 'var(--primary)',
+                  }}>
+                    {w.totalVolume > 0 ? `${w.totalVolume.toFixed(0)}` : '—'}
                   </p>
-                  <ChevronRight size={16} style={{ color: 'var(--text-muted)' }}/>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)' }}>KG</p>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </section>
-    </div>
-  )
-}
-
-function Stat({ icon, label, value, unit }: { icon: React.ReactNode; label: string; value: string; unit: string }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-      <span style={{ color: 'var(--primary)' }}>{icon}</span>
-      <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--primary)' }}>{value} {unit}</span>
-      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{label}</span>
+      </div>
     </div>
   )
 }

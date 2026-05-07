@@ -1,87 +1,158 @@
 import { useState } from 'react'
 import { db } from '../lib/db/database'
-import { Trash2, Info, Database } from 'lucide-react'
 
 export default function SettingsPage() {
   const [cleared, setCleared] = useState(false)
 
   async function handleClearData() {
-    if (!confirm('確定要清除所有訓練記錄嗎？此操作無法復原。')) return
+    if (!confirm('// PURGE ALL SESSION DATA? THIS CANNOT BE UNDONE.')) return
     await db.workouts.clear()
     setCleared(true)
-    setTimeout(() => setCleared(false), 2000)
+    setTimeout(() => setCleared(false), 2500)
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4">
-      <div className="pt-2">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>設定</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>應用程式偏好設定</p>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+
+      {/* Header */}
+      <div className="steel" style={{ padding: '20px 16px 16px', borderBottom: '3px solid var(--primary)', flexShrink: 0 }}>
+        <h1 style={{ fontFamily: 'var(--font-brutal)', fontSize: '30px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
+          SYSTEM
+        </h1>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.08em' }}>
+          // CONFIGURATION &amp; DATA MANAGEMENT
+        </p>
       </div>
 
-      {/* App info */}
-      <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>關於</h2>
-        <div className="rounded-xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-4 px-4 py-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--primary)' }}>
-              <span className="text-xl font-black text-black">P</span>
+      <div className="brutal-rule"/>
+
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+        {/* App identity */}
+        <div style={{ border: '2px solid var(--border)', borderTop: '3px solid var(--primary)', background: 'var(--surface)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px' }}>
+            <div style={{
+              width: '52px', height: '52px', flexShrink: 0,
+              background: 'var(--primary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '3px solid var(--primary-dark)',
+              boxShadow: '3px 3px 0 var(--primary-dark)',
+            }}>
+              <span style={{ fontFamily: 'var(--font-brutal)', fontSize: '26px', color: '#000', fontWeight: 900, lineHeight: 1 }}>P</span>
             </div>
             <div>
-              <p className="font-semibold" style={{ color: 'var(--text)' }}>Progresso</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>漸進性超負荷訓練日誌 v1.0</p>
+              <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '22px', color: 'var(--text)', letterSpacing: '0.06em' }}>PROGRESSO</p>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                IRON DISCIPLINE TRACKER // v1.0
+              </p>
             </div>
           </div>
-          <div className="flex items-start gap-3 px-4 py-3 border-t" style={{ borderColor: 'var(--border)', background: 'var(--surface-variant)' }}>
-            <Info size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--text-muted)' }}/>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              所有訓練資料儲存在您的裝置本機（IndexedDB）。資料不會上傳至任何伺服器，完全離線使用。
+          <div style={{
+            padding: '12px 16px',
+            borderTop: '2px solid var(--border)',
+            background: 'var(--surface-variant)',
+            display: 'flex', gap: '10px',
+          }}>
+            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--primary)', fontSize: '14px', flexShrink: 0 }}>&gt;</span>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              ALL DATA IS STORED LOCALLY IN YOUR BROWSER (INDEXEDDB).
+              NO SERVER. NO CLOUD. OFFLINE-FIRST. YOUR IRON, YOUR DATA.
             </p>
           </div>
         </div>
-      </section>
 
-      {/* Data management */}
-      <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>資料管理</h2>
-        <div className="rounded-xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
-            <Database size={18} style={{ color: 'var(--text-muted)' }}/>
-            <div className="flex-1">
-              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>本機資料庫</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>IndexedDB · 僅限此瀏覽器</p>
-            </div>
-          </div>
-          <button onClick={handleClearData}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left transition-opacity active:opacity-60">
-            <Trash2 size={18} style={{ color: 'var(--danger)' }}/>
+        {/* Data section header */}
+        <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
+          ▸ DATA MANAGEMENT
+        </p>
+
+        {/* Storage info */}
+        <div style={{ border: '2px solid var(--border)', background: 'var(--surface)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--danger)' }}>
-                {cleared ? '✓ 已清除' : '清除所有訓練記錄'}
+              <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '14px', color: 'var(--text)', letterSpacing: '0.05em' }}>LOCAL DATABASE</p>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>INDEXEDDB ╱ BROWSER-LOCAL</p>
+            </div>
+            <div style={{
+              padding: '4px 10px',
+              background: 'var(--surface-variant)',
+              border: '2px solid var(--border-heavy)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '10px',
+              color: 'var(--primary)',
+              letterSpacing: '0.08em',
+            }}>ACTIVE</div>
+          </div>
+
+          {/* Purge button */}
+          <button
+            onClick={handleClearData}
+            style={{
+              display: 'flex', width: '100%', alignItems: 'center', gap: '14px',
+              padding: '16px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}>
+            <div style={{
+              width: '36px', height: '36px', flexShrink: 0,
+              background: cleared ? 'transparent' : 'rgba(204,17,17,0.1)',
+              border: `2px solid ${cleared ? 'var(--border-heavy)' : 'var(--primary)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: cleared ? 'var(--text-muted)' : 'var(--primary)',
+              fontFamily: 'var(--font-brutal)',
+              fontSize: '16px',
+            }}>
+              {cleared ? '✓' : '✕'}
+            </div>
+            <div>
+              <p style={{
+                fontFamily: 'var(--font-brutal)',
+                fontSize: '14px',
+                letterSpacing: '0.05em',
+                color: cleared ? 'var(--text-muted)' : 'var(--primary)',
+              }}>
+                {cleared ? 'DATA PURGED' : 'PURGE ALL SESSION DATA'}
               </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>此操作無法復原</p>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                {cleared ? 'LOG CLEARED SUCCESSFULLY' : 'IRREVERSIBLE — CANNOT BE UNDONE'}
+              </p>
             </div>
           </button>
         </div>
-      </section>
 
-      {/* Tips */}
-      <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>使用提示</h2>
-        <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        {/* Protocol tips */}
+        <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
+          ▸ IRON PROTOCOL
+        </p>
+        <div style={{ border: '2px solid var(--border)', borderLeft: '4px solid var(--primary)', background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 0 }}>
           {[
-            '記錄每組的重量和次數，追蹤漸進式超負荷',
-            '每週至少訓練 3 次以獲得最佳分析數據',
-            '完成的組數才會計入總容量統計',
+            'LOG EVERY SET. TRACK PROGRESSIVE OVERLOAD.',
+            'MINIMUM 3 SESSIONS/WEEK FOR MEANINGFUL ANALYTICS.',
+            'ONLY COMPLETED SETS COUNT TOWARD VOLUME.',
           ].map((tip, i) => (
-            <div key={i} className="flex gap-3">
-              <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{ background: 'var(--primary)', color: '#000' }}>{i + 1}</span>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{tip}</p>
+            <div key={i} style={{
+              display: 'flex', gap: '12px', alignItems: 'flex-start',
+              padding: '12px 14px',
+              borderTop: i > 0 ? '1px solid var(--border)' : undefined,
+            }}>
+              <span style={{
+                flexShrink: 0, width: '22px', height: '22px',
+                background: 'var(--primary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--font-brutal)',
+                fontSize: '11px',
+                color: '#000',
+                fontWeight: 900,
+              }}>{i+1}</span>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.5, letterSpacing: '0.04em' }}>
+                {tip}
+              </p>
             </div>
           ))}
         </div>
-      </section>
+      </div>
     </div>
   )
 }
