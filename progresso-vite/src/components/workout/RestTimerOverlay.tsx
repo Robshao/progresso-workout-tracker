@@ -14,7 +14,7 @@
  * The NFGU lock panel uses kIronDropDown (top-to-bottom settle).
  */
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useMemo } from 'react'
 
 /* ── NFGU quote pool ────────────────────────────────────────────
    Shown when restSec ≤ 10 AND hasHighRPE.
@@ -31,7 +31,7 @@ const NFGU_QUOTES = [
 ] as const
 
 const LONG_PRESS_MS   = 1500   // ms to hold before skip is confirmed
-const NFGU_LOCK_SEC   = 30     // seconds remaining threshold to trigger lock
+const NFGU_LOCK_SEC   = 20     // seconds remaining threshold to trigger lock
 
 /* ── Props ──────────────────────────────────────────────────── */
 interface Props {
@@ -53,8 +53,10 @@ export function RestTimerOverlay({ restSec, totalSec = 90, hasHighRPE = false, o
   const holdStartRef  = useRef<number | null>(null)
   const rafRef        = useRef<number | null>(null)
 
-  /* ── Micro-copy: deterministic rotation ─────────────────────── */
-  const quoteIndex   = Math.floor(Date.now() / 8000) % NFGU_QUOTES.length
+  /* ── Micro-copy: randomised on mount, stable during countdown ── */
+  // useMemo with no deps → runs once per component instance (each rest period)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const quoteIndex    = useMemo(() => Math.floor(Math.random() * NFGU_QUOTES.length), [])
   const showMicrocopy = !isDone && restSec <= 10 && hasHighRPE
 
   /* ── Skip button handler ────────────────────────────────────── */

@@ -81,6 +81,18 @@ function triggerShake(heavy = false) {
   setTimeout(() => root.classList.remove(cls), heavy ? 500 : 400)
 }
 
+/* ── Exercise-PR full-screen flash ──────────────────────────────
+   Applies neon-green CSS variable override + opacity flicker to
+   #root for exactly 100ms, then reverts. Purely imperative DOM
+   manipulation — no React state needed for this ephemeral effect.
+──────────────────────────────────────────────────────────────── */
+function triggerPRFlash() {
+  const root = document.getElementById('root')
+  if (!root) return
+  root.classList.add('nfgu-volume-pr', 'nfgu-volume-pr-flash')
+  setTimeout(() => root.classList.remove('nfgu-volume-pr', 'nfgu-volume-pr-flash'), 100)
+}
+
 /* ── Shared input styles ────────────────────────────────────── */
 const kInputBase: React.CSSProperties = {
   background: 'var(--bg)', border: '2px solid var(--border-heavy)',
@@ -152,10 +164,11 @@ export function ExerciseBlockCard({
       const isRpe10 = rirVal === 0
 
       if (isSetPR) {
-        haptic.pr()
+        haptic.volumePR()        // 500ms heavy resonance — upgraded from pr() double-clang
         setPrKey(String(si))
         setTimeout(() => setPrKey(null), 900)
         triggerShake(isRpe10)
+        triggerPRFlash()         // 100ms full-screen neon green flash
       } else {
         haptic.setDone()
         setFlashKey(String(si))
