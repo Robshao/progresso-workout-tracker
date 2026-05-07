@@ -229,13 +229,14 @@ export default function ActiveWorkoutPage() {
                 }}>✕</button>
             </div>
 
-            {/* Column headers */}
+            {/* Column headers — grid: # | KG | REPS | [COMPLETE SET] */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '28px 1fr 1fr 44px',
+              gridTemplateColumns: '32px 1fr 1fr 76px',
               gap: '4px',
-              padding: '8px 14px',
+              padding: '8px 14px 8px 14px',
               borderBottom: '1px solid var(--border)',
+              alignItems: 'center',
             }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>#</span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.1em' }}>KG</span>
@@ -260,46 +261,69 @@ export default function ActiveWorkoutPage() {
                 </select>
                 <span style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', fontSize: '8px', pointerEvents: 'none' }}>▼</span>
               </div>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.1em' }}>✓</span>
+              {/* "Complete Set" label — aligns above the primary thumb-zone button */}
+              <span style={{
+                fontFamily: 'var(--font-brutal)',
+                fontSize: '8px',
+                color: 'var(--primary)',
+                textAlign: 'center',
+                letterSpacing: '0.08em',
+              }}>DONE</span>
             </div>
 
-            {/* Sets */}
+            {/* Sets — "Complete Set" button occupies bottom-right 65% visual weight */}
             {block.sets.map((set, si) => (
               <div key={si} style={{
                 display: 'grid',
-                gridTemplateColumns: '28px 1fr 1fr 44px',
+                gridTemplateColumns: '32px 1fr 1fr 76px',
                 gap: '4px',
-                padding: '6px 14px',
+                padding: '4px 14px',
                 borderBottom: '1px solid var(--border)',
-                background: set.done ? 'rgba(204,17,17,0.07)' : undefined,
-                alignItems: 'center',
+                background: set.done ? 'rgba(204,17,17,0.09)' : undefined,
+                alignItems: 'stretch',
+                minHeight: '54px',
               }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-muted)' }}>{si+1}</span>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '13px',
+                  color: 'var(--text-muted)', display: 'flex',
+                  alignItems: 'center',
+                }}>{si+1}</span>
                 <input
                   type="number" inputMode="decimal" placeholder="0"
                   value={set.weight}
                   onChange={e => updateSet(bi, si, 'weight', e.target.value)}
-                  style={inputSty}
+                  style={{ ...inputSty, fontSize: '18px', fontWeight: 700 }}
                 />
                 <input
                   type="number" inputMode="decimal" placeholder={block.repsUnit}
                   value={set.reps}
                   onChange={e => updateSet(bi, si, 'reps', e.target.value)}
-                  style={inputSty}
+                  style={{ ...inputSty, fontSize: '18px', fontWeight: 700 }}
                 />
+                {/* PRIMARY THUMB-ZONE ACTION — right-bottom, 76px wide, full row height */}
                 <button
                   onClick={() => updateSet(bi, si, 'done', !set.done)}
                   style={{
-                    height: '40px',
-                    background: set.done ? 'var(--primary)' : 'var(--bg)',
-                    border: `2px solid ${set.done ? 'var(--primary)' : 'var(--border-heavy)'}`,
+                    minHeight: '54px',
+                    background: set.done
+                      ? 'var(--primary)'
+                      : 'linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%)',
+                    border: `3px solid ${set.done ? 'var(--primary)' : 'var(--border-heavy)'}`,
                     color: set.done ? '#000' : 'var(--text-muted)',
                     fontFamily: 'var(--font-brutal)',
-                    fontSize: '16px',
+                    fontSize: set.done ? '22px' : '18px',
+                    fontWeight: 900,
                     cursor: 'pointer',
-                    boxShadow: set.done ? '2px 2px 0 var(--primary-dark)' : 'none',
+                    boxShadow: set.done
+                      ? '0 0 12px rgba(204,17,17,0.4), 3px 3px 0 var(--primary-dark)'
+                      : '2px 2px 0 #000',
+                    letterSpacing: set.done ? '0' : '0',
+                    transition: 'background 0.12s, box-shadow 0.12s, color 0.12s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}>
-                  ■
+                  {set.done ? '✓' : '■'}
                 </button>
               </div>
             ))}
