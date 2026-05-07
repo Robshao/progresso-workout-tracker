@@ -5,6 +5,7 @@ import ActiveWorkoutPage from './pages/workout/ActiveWorkoutPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ExercisesPage from './pages/ExercisesPage'
 import HistoryPage from './pages/HistoryPage'
+import ManualEntryPage from './pages/history/ManualEntryPage'
 import SettingsPage from './pages/SettingsPage'
 
 function MainLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* Full-screen routes (no bottom nav) */}
-        <Route path="/workout/active" element={<ActiveWorkoutPage />} />
+        <Route path="/workout/active"  element={<ActiveWorkoutPage />} />
+        <Route path="/history/add"     element={<ManualEntryPage />} />
 
         {/* Main layout routes */}
         <Route path="/workout" element={<MainLayout><WorkoutPage /></MainLayout>} />

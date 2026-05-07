@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { db, type SavedWorkout } from '../lib/db/database'
 
 function fmtDuration(sec: number) {
@@ -13,6 +14,7 @@ function fmtTime(ts: number) {
 }
 
 export default function HistoryPage() {
+  const navigate = useNavigate()
   const [workouts, setWorkouts] = useState<SavedWorkout[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
 
@@ -23,13 +25,29 @@ export default function HistoryPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header */}
-      <div className="steel" style={{ padding: '20px 16px 16px', borderBottom: '3px solid var(--primary)', flexShrink: 0 }}>
-        <h1 style={{ fontFamily: 'var(--font-brutal)', fontSize: '30px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
-          IRON LOG
-        </h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.08em' }}>
-          // {workouts.length} SESSION{workouts.length !== 1 ? 'S' : ''} RECORDED
-        </p>
+      <div className="steel" style={{ padding: '20px 16px 14px', borderBottom: '3px solid var(--primary)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ fontFamily: 'var(--font-brutal)', fontSize: '30px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
+              IRON LOG
+            </h1>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.08em' }}>
+              // {workouts.length} SESSION{workouts.length !== 1 ? 'S' : ''} RECORDED
+            </p>
+          </div>
+          {/* Manual add entry button */}
+          <button
+            onClick={() => navigate('/history/add')}
+            style={{
+              background: 'var(--primary)', border: '2px solid var(--primary)',
+              boxShadow: '3px 3px 0 var(--primary-dark)',
+              color: '#000', fontFamily: 'var(--font-brutal)',
+              fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em',
+              padding: '10px 14px', cursor: 'pointer', flexShrink: 0,
+            }}>
+            + FORGE
+          </button>
+        </div>
       </div>
 
       <div className="brutal-rule" />
