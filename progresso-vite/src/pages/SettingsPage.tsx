@@ -1,15 +1,23 @@
 import { useState } from 'react'
 import { db } from '../lib/db/database'
+import { useLanguage } from '../contexts/LanguageContext'
+import type { LangCode } from '../locales'
 
 export default function SettingsPage() {
+  const { loc, lang, setLang } = useLanguage()
   const [cleared, setCleared] = useState(false)
 
   async function handleClearData() {
-    if (!confirm('// PURGE ALL SESSION DATA? THIS CANNOT BE UNDONE.')) return
+    if (!confirm(loc.settings.purgeConfirm)) return
     await db.workouts.clear()
     setCleared(true)
     setTimeout(() => setCleared(false), 2500)
   }
+
+  const LANG_OPTIONS: { code: LangCode; label: string; native: string }[] = [
+    { code: 'zh-TW', label: '繁體中文', native: '繁中' },
+    { code: 'en-US', label: 'English',  native: 'EN'   },
+  ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
@@ -17,10 +25,10 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="steel" style={{ padding: '20px 16px 16px', borderBottom: '3px solid var(--primary)', flexShrink: 0 }}>
         <h1 style={{ fontFamily: 'var(--font-brutal)', fontSize: '30px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
-          SYSTEM
+          {loc.settings.title}
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.08em' }}>
-          // CONFIGURATION &amp; DATA MANAGEMENT
+          {loc.settings.subtitle}
         </p>
       </div>
 
@@ -43,7 +51,7 @@ export default function SettingsPage() {
             <div>
               <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '22px', color: 'var(--text)', letterSpacing: '0.06em' }}>PROGRESSO</p>
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                IRON DISCIPLINE TRACKER // v1.0
+                {loc.settings.appTagline}
               </p>
             </div>
           </div>
@@ -55,23 +63,60 @@ export default function SettingsPage() {
           }}>
             <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--primary)', fontSize: '14px', flexShrink: 0 }}>&gt;</span>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-              ALL DATA IS STORED LOCALLY IN YOUR BROWSER (INDEXEDDB).
-              NO SERVER. NO CLOUD. OFFLINE-FIRST. YOUR IRON, YOUR DATA.
+              {loc.settings.offlineNote}
             </p>
           </div>
         </div>
 
+        {/* ── Language switcher ── */}
+        <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
+          ▸ {loc.settings.languageSection}
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
+          {LANG_OPTIONS.map(({ code, label, native }) => {
+            const isActive = lang === code
+            return (
+              <button
+                key={code}
+                onClick={() => setLang(code)}
+                style={{
+                  padding: '14px 10px',
+                  background: isActive ? 'var(--primary)' : 'var(--surface)',
+                  border: `2px solid ${isActive ? 'var(--primary)' : 'var(--border-heavy)'}`,
+                  boxShadow: isActive ? '3px 3px 0 var(--primary-dark)' : 'none',
+                  cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                }}>
+                <span style={{
+                  fontFamily: 'var(--font-brutal)', fontSize: '20px', fontWeight: 900,
+                  color: isActive ? '#000' : 'var(--text-muted)',
+                  letterSpacing: '0.04em',
+                }}>{native}</span>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '10px',
+                  color: isActive ? '#000' : 'var(--text-muted)',
+                  letterSpacing: '0.06em',
+                }}>{label}</span>
+              </button>
+            )
+          })}
+        </div>
+
         {/* Data section header */}
         <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
-          ▸ DATA MANAGEMENT
+          ▸ {loc.settings.dataSection}
         </p>
 
         {/* Storage info */}
         <div style={{ border: '2px solid var(--border)', background: 'var(--surface)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
             <div>
-              <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '14px', color: 'var(--text)', letterSpacing: '0.05em' }}>LOCAL DATABASE</p>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>INDEXEDDB ╱ BROWSER-LOCAL</p>
+              <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '14px', color: 'var(--text)', letterSpacing: '0.05em' }}>
+                {loc.settings.localDbLabel}
+              </p>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                {loc.settings.localDbSub}
+              </p>
             </div>
             <div style={{
               padding: '4px 10px',
@@ -81,7 +126,7 @@ export default function SettingsPage() {
               fontSize: '10px',
               color: 'var(--primary)',
               letterSpacing: '0.08em',
-            }}>ACTIVE</div>
+            }}>{loc.settings.activeLabel}</div>
           </div>
 
           {/* Purge button */}
@@ -113,10 +158,10 @@ export default function SettingsPage() {
                 letterSpacing: '0.05em',
                 color: cleared ? 'var(--text-muted)' : 'var(--primary)',
               }}>
-                {cleared ? 'DATA PURGED' : 'PURGE ALL SESSION DATA'}
+                {cleared ? loc.settings.purgedLabel : loc.settings.purgeLabel}
               </p>
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>
-                {cleared ? 'LOG CLEARED SUCCESSFULLY' : 'IRREVERSIBLE — CANNOT BE UNDONE'}
+                {cleared ? loc.settings.purgedSub : loc.settings.purgeSub}
               </p>
             </div>
           </button>
@@ -124,14 +169,10 @@ export default function SettingsPage() {
 
         {/* Protocol tips */}
         <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
-          ▸ IRON PROTOCOL
+          ▸ {loc.settings.protocolSection}
         </p>
         <div style={{ border: '2px solid var(--border)', borderLeft: '4px solid var(--primary)', background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {[
-            'LOG EVERY SET. TRACK PROGRESSIVE OVERLOAD.',
-            'MINIMUM 3 SESSIONS/WEEK FOR MEANINGFUL ANALYTICS.',
-            'ONLY COMPLETED SETS COUNT TOWARD VOLUME.',
-          ].map((tip, i) => (
+          {[loc.settings.tip1, loc.settings.tip2, loc.settings.tip3].map((tip, i) => (
             <div key={i} style={{
               display: 'flex', gap: '12px', alignItems: 'flex-start',
               padding: '12px 14px',

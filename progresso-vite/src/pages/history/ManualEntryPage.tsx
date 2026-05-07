@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../../lib/db/database'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 /* ── Types ───────────────────────────────────────────────────── */
 interface ManualSet      { weight: string; reps: string; done: boolean }
@@ -26,7 +27,7 @@ const EXERCISE_META: Record<string, { group: string; equipment: string }> = {
 }
 
 /* ── Shared input style ──────────────────────────────────────── */
-const inputSty: React.CSSProperties = {
+const kInputSty: React.CSSProperties = {
   background: 'var(--bg)',
   border: '2px solid var(--border-heavy)',
   color: 'var(--text)',
@@ -42,15 +43,16 @@ const todayValue = () => new Date().toISOString().slice(0, 10)
 
 export default function ManualEntryPage() {
   const navigate = useNavigate()
+  const { loc } = useLanguage()
 
   /* ── Form state ─────────────────────────────────────────────── */
-  const [date, setDate]         = useState(todayValue())
-  const [durationMin, setDur]   = useState('')
+  const [date, setDate]           = useState(todayValue())
+  const [durationMin, setDur]     = useState('')
   const [exercises, setExercises] = useState<ManualExercise[]>([])
   const [showPicker, setShowPicker] = useState(false)
   const [pickerQuery, setPickerQuery] = useState('')
-  const [error, setError]       = useState('')
-  const [saving, setSaving]     = useState(false)
+  const [error, setError]         = useState('')
+  const [saving, setSaving]       = useState(false)
 
   /* ── Derived stats ───────────────────────────────────────────── */
   const totalSets = exercises.reduce((s, ex) => s + ex.sets.filter(x => x.done).length, 0)
@@ -81,13 +83,13 @@ export default function ManualEntryPage() {
 
   /* ── Save ────────────────────────────────────────────────────── */
   async function handleSave() {
-    if (!date)             { setError('// DATE REQUIRED'); return }
-    if (exercises.length === 0) { setError('// ADD AT LEAST ONE MOVEMENT'); return }
+    if (!date)               { setError(loc.manualEntry.errorDate);     return }
+    if (exercises.length === 0) { setError(loc.manualEntry.errorMovement); return }
     setError(''); setSaving(true)
 
-    const startedAt  = new Date(date).getTime()
+    const startedAt   = new Date(date).getTime()
     const durationSec = Math.max((parseFloat(durationMin) || 0) * 60, 0)
-    const endedAt    = startedAt + durationSec * 1000
+    const endedAt     = startedAt + durationSec * 1000
 
     await db.workouts.add({
       id: crypto.randomUUID(),
@@ -128,15 +130,15 @@ export default function ManualEntryPage() {
             color: 'var(--text-muted)', fontFamily: 'var(--font-brutal)',
             fontSize: '13px', letterSpacing: '0.08em', padding: '8px 12px', cursor: 'pointer',
           }}>
-          ← BACK
+          ← {loc.manualEntry.backBtn}
         </button>
 
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.12em' }}>
-            MANUAL ENTRY
+            {loc.manualEntry.entryLabel}
           </p>
           <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '20px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
-            FORGE RECORD
+            {loc.manualEntry.title}
           </p>
         </div>
 
@@ -151,7 +153,7 @@ export default function ManualEntryPage() {
             padding: '10px 14px', cursor: 'pointer',
             opacity: saving ? 0.6 : 1,
           }}>
-          {saving ? '...' : '■ SAVE'}
+          {saving ? '...' : `■ ${loc.manualEntry.saveBtn}`}
         </button>
       </div>
 
@@ -162,9 +164,9 @@ export default function ManualEntryPage() {
         borderBottom: '2px solid var(--border)', flexShrink: 0,
       }}>
         {[
-          ['VOLUME', totalVolume > 0 ? `${totalVolume.toFixed(0)} KG` : '— KG'],
-          ['SETS',   String(totalSets)],
-          ['MOVES',  String(exercises.length)],
+          [loc.manualEntry.volumeLabel, totalVolume > 0 ? `${totalVolume.toFixed(0)} KG` : '— KG'],
+          [loc.manualEntry.setsLabel,   String(totalSets)],
+          [loc.manualEntry.movesLabel,  String(exercises.length)],
         ].map(([l, v]) => (
           <div key={l} style={{ background: 'var(--surface-variant)', padding: '8px 4px', textAlign: 'center' }}>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: 'var(--primary)', fontWeight: 700 }}>{v}</p>
@@ -190,18 +192,18 @@ export default function ManualEntryPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
           <div>
             <label style={{ display: 'block', fontFamily: 'var(--font-brutal)', fontSize: '11px', color: 'var(--text-muted)', letterSpacing: '0.12em', marginBottom: '6px' }}>
-              ▸ DATE
+              ▸ {loc.manualEntry.dateLabel}
             </label>
             <input
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              style={{ ...inputSty, textAlign: 'left', padding: '10px 12px', colorScheme: 'dark' }}
+              style={{ ...kInputSty, textAlign: 'left', padding: '10px 12px', colorScheme: 'dark' }}
             />
           </div>
           <div>
             <label style={{ display: 'block', fontFamily: 'var(--font-brutal)', fontSize: '11px', color: 'var(--text-muted)', letterSpacing: '0.12em', marginBottom: '6px' }}>
-              ▸ DURATION (MIN)
+              ▸ {loc.manualEntry.durationLabel}
             </label>
             <input
               type="number"
@@ -209,7 +211,7 @@ export default function ManualEntryPage() {
               placeholder="60"
               value={durationMin}
               onChange={e => setDur(e.target.value)}
-              style={inputSty}
+              style={kInputSty}
             />
           </div>
         </div>
@@ -227,6 +229,7 @@ export default function ManualEntryPage() {
               background: 'var(--surface-variant)',
             }}>
               <div>
+                {/* Exercise name is user-selected data — NOT translated */}
                 <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '16px', color: 'var(--text)', letterSpacing: '0.05em' }}>
                   {ex.name}
                 </p>
@@ -250,7 +253,7 @@ export default function ManualEntryPage() {
               display: 'grid', gridTemplateColumns: '28px 1fr 1fr 44px',
               gap: '4px', padding: '8px 14px', borderBottom: '1px solid var(--border)',
             }}>
-              {['#','KG','REPS','✓'].map((h, hi) => (
+              {[loc.manualEntry.colHash, loc.manualEntry.colKg, loc.manualEntry.colReps, loc.manualEntry.colDone].map((h, hi) => (
                 <span key={hi} style={{
                   fontFamily: 'var(--font-mono)', fontSize: '9px',
                   color: 'var(--text-muted)', letterSpacing: '0.1em',
@@ -273,13 +276,13 @@ export default function ManualEntryPage() {
                   type="number" inputMode="decimal" placeholder="0"
                   value={set.weight}
                   onChange={e => updateSet(ei, si, 'weight', e.target.value)}
-                  style={inputSty}
+                  style={kInputSty}
                 />
                 <input
                   type="number" inputMode="decimal" placeholder="—"
                   value={set.reps}
                   onChange={e => updateSet(ei, si, 'reps', e.target.value)}
-                  style={inputSty}
+                  style={kInputSty}
                 />
                 <button
                   onClick={() => updateSet(ei, si, 'done', !set.done)}
@@ -302,7 +305,7 @@ export default function ManualEntryPage() {
                 border: 'none', borderTop: '2px dashed var(--border-heavy)',
                 color: 'var(--primary)', fontFamily: 'var(--font-brutal)',
                 fontSize: '13px', letterSpacing: '0.1em', cursor: 'pointer',
-              }}>+ ADD SET</button>
+              }}>{loc.manualEntry.addSetBtn}</button>
           </div>
         ))}
 
@@ -314,10 +317,10 @@ export default function ManualEntryPage() {
           }}>
             <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '32px', color: 'var(--text-dim)' }}>☠</p>
             <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '14px', color: 'var(--text-muted)', marginTop: '10px' }}>
-              NO MOVEMENTS ADDED
+              {loc.manualEntry.noMovementsTitle}
             </p>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-              &gt; LOAD A MOVEMENT BELOW_
+              {loc.manualEntry.noMovementsSub}
             </p>
           </div>
         )}
@@ -326,7 +329,7 @@ export default function ManualEntryPage() {
         <button
           className="btn-brutal"
           onClick={() => setShowPicker(true)}>
-          + LOAD MOVEMENT
+          {loc.manualEntry.addMovementBtn}
         </button>
       </div>
 
@@ -349,7 +352,7 @@ export default function ManualEntryPage() {
               background: 'var(--surface-variant)',
             }}>
               <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '18px', letterSpacing: '0.08em', color: 'var(--text)' }}>
-                ▸ SELECT MOVEMENT
+                ▸ {loc.manualEntry.pickerTitle}
               </p>
               <button
                 onClick={() => setShowPicker(false)}
@@ -369,7 +372,7 @@ export default function ManualEntryPage() {
             }}>
               <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--primary)', fontSize: '14px' }}>&gt;</span>
               <input
-                type="text" placeholder="SEARCH..." value={pickerQuery}
+                type="text" placeholder={loc.manualEntry.pickerSearch} value={pickerQuery}
                 onChange={e => setPickerQuery(e.target.value)} autoFocus
                 style={{
                   flex: 1, background: 'transparent', border: 'none', outline: 'none',
@@ -393,6 +396,7 @@ export default function ManualEntryPage() {
                     cursor: 'pointer', textAlign: 'left',
                   }}>
                   <div>
+                    {/* Exercise names are DB data — NOT translated */}
                     <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '15px', color: 'var(--text)', letterSpacing: '0.04em' }}>
                       {name}
                     </p>

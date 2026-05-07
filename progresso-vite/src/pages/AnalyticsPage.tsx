@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db, type SavedWorkout } from '../lib/db/database'
+import { useLanguage } from '../contexts/LanguageContext'
 
 function weekLabel(date: Date) {
   const d = new Date(date)
@@ -9,6 +10,7 @@ function weekLabel(date: Date) {
 }
 
 export default function AnalyticsPage() {
+  const { loc } = useLanguage()
   const [workouts, setWorkouts] = useState<SavedWorkout[]>([])
 
   useEffect(() => {
@@ -55,10 +57,10 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="steel" style={{ padding: '20px 16px 16px', borderBottom: '3px solid var(--primary)', flexShrink: 0 }}>
         <h1 style={{ fontFamily: 'var(--font-brutal)', fontSize: '30px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
-          IRON STATS
+          {loc.analytics.title}
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.08em' }}>
-          // ALL-TIME PERFORMANCE DATA
+          {loc.analytics.subtitle}
         </p>
       </div>
 
@@ -69,10 +71,10 @@ export default function AnalyticsPage() {
         {/* Summary stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2px' }}>
           {[
-            { label: 'SESSIONS',    val: `${workouts.length}` },
-            { label: 'TOTAL IRON',  val: totalVolume > 0 ? `${(totalVolume/1000).toFixed(1)}T` : '—' },
-            { label: 'TOTAL SETS',  val: `${totalSets}` },
-            { label: 'AVG SESSION', val: avgDuration ? `${avgDuration}M` : '—' },
+            { label: loc.analytics.sessionsLabel,   val: `${workouts.length}` },
+            { label: loc.analytics.totalIronLabel,  val: totalVolume > 0 ? `${(totalVolume/1000).toFixed(1)}${loc.analytics.tUnit}` : '—' },
+            { label: loc.analytics.totalSetsLabel,  val: `${totalSets}` },
+            { label: loc.analytics.avgSessionLabel, val: avgDuration ? `${avgDuration}${loc.analytics.minUnit}` : '—' },
           ].map(({ label, val }) => (
             <div key={label} style={{
               background: 'var(--surface)',
@@ -89,7 +91,7 @@ export default function AnalyticsPage() {
         {/* Weekly volume chart */}
         <div>
           <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: '10px' }}>
-            ▸ WEEKLY VOLUME
+            ▸ {loc.analytics.weeklySection}
           </p>
           <div style={{
             border: '2px solid var(--border)',
@@ -121,7 +123,7 @@ export default function AnalyticsPage() {
             </div>
             {workouts.length === 0 && (
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '8px' }}>
-                &gt; NO DATA_
+                {loc.analytics.noDataLabel}
               </p>
             )}
           </div>
@@ -131,7 +133,7 @@ export default function AnalyticsPage() {
         {groups.length > 0 && (
           <div>
             <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: '10px' }}>
-              ▸ MUSCLE LOAD DISTRIBUTION
+              ▸ {loc.analytics.muscleSection}
             </p>
             <div style={{ border: '2px solid var(--border)', background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 0 }}>
               {groups.map(([group, sets], i) => (
@@ -140,8 +142,9 @@ export default function AnalyticsPage() {
                   borderTop: i > 0 ? '1px solid var(--border)' : undefined,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    {/* Muscle group names are user data (exercise metadata) — not translated */}
                     <span style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', color: 'var(--text)', letterSpacing: '0.06em' }}>{group}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--primary)' }}>{sets} SETS</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--primary)' }}>{sets} {loc.analytics.setsUnit}</span>
                   </div>
                   {/* Rebar progress bar */}
                   <div style={{ height: '6px', background: 'var(--surface-variant)', border: '1px solid var(--border)' }}>

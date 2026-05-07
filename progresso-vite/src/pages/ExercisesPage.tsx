@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLanguage } from '../contexts/LanguageContext'
 
 const EXERCISES = [
   { id: 1,  name: '槓鈴臥推', equipment: '槓鈴',    group: '胸'  },
@@ -15,7 +16,7 @@ const EXERCISES = [
   { id: 12, name: '平板支撐', equipment: '自體重量', group: '核心'},
 ]
 
-const GROUPS = ['ALL', ...Array.from(new Set(EXERCISES.map(e => e.group)))]
+const UNIQUE_GROUPS = Array.from(new Set(EXERCISES.map(e => e.group)))
 
 /* Brutalist color tag per group */
 const GROUP_TAG: Record<string, string> = {
@@ -23,8 +24,12 @@ const GROUP_TAG: Record<string, string> = {
 }
 
 export default function ExercisesPage() {
-  const [query, setQuery]           = useState('')
+  const { loc } = useLanguage()
+  const [query, setQuery]             = useState('')
   const [activeGroup, setActiveGroup] = useState('ALL')
+
+  /* Translate the "ALL" sentinel for display but keep internal state as 'ALL' */
+  const GROUPS = ['ALL', ...UNIQUE_GROUPS]
 
   const filtered = EXERCISES.filter(e =>
     (activeGroup === 'ALL' || e.group === activeGroup) &&
@@ -37,10 +42,10 @@ export default function ExercisesPage() {
       {/* Header */}
       <div className="steel" style={{ padding: '20px 16px 14px', borderBottom: '3px solid var(--primary)', flexShrink: 0 }}>
         <h1 style={{ fontFamily: 'var(--font-brutal)', fontSize: '30px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
-          IRON LIBRARY
+          {loc.exercises.title}
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.08em' }}>
-          // {EXERCISES.length} MOVEMENTS CATALOGUED
+          // {EXERCISES.length} {loc.exercises.catalogueSuffix}
         </p>
       </div>
 
@@ -55,7 +60,7 @@ export default function ExercisesPage() {
           <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--primary)', fontSize: '14px' }}>&gt;</span>
           <input
             type="text"
-            placeholder="SEARCH MOVEMENTS..."
+            placeholder={loc.exercises.searchPlaceholder}
             value={query}
             onChange={e => setQuery(e.target.value)}
             style={{
@@ -68,26 +73,29 @@ export default function ExercisesPage() {
 
         {/* Group filter pills */}
         <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '2px' }}>
-          {GROUPS.map(g => (
-            <button
-              key={g}
-              onClick={() => setActiveGroup(g)}
-              style={{
-                flexShrink: 0,
-                padding: '6px 12px',
-                background: activeGroup === g ? 'var(--primary)' : 'var(--bg)',
-                border: `2px solid ${activeGroup === g ? 'var(--primary)' : 'var(--border-heavy)'}`,
-                color: activeGroup === g ? '#000' : 'var(--text-muted)',
-                fontFamily: 'var(--font-brutal)',
-                fontSize: '11px',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                cursor: 'pointer',
-                boxShadow: activeGroup === g ? '2px 2px 0 var(--primary-dark)' : 'none',
-              }}>
-              {g}
-            </button>
-          ))}
+          {GROUPS.map(g => {
+            const displayLabel = g === 'ALL' ? loc.exercises.allFilter : g
+            return (
+              <button
+                key={g}
+                onClick={() => setActiveGroup(g)}
+                style={{
+                  flexShrink: 0,
+                  padding: '6px 12px',
+                  background: activeGroup === g ? 'var(--primary)' : 'var(--bg)',
+                  border: `2px solid ${activeGroup === g ? 'var(--primary)' : 'var(--border-heavy)'}`,
+                  color: activeGroup === g ? '#000' : 'var(--text-muted)',
+                  fontFamily: 'var(--font-brutal)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  cursor: 'pointer',
+                  boxShadow: activeGroup === g ? '2px 2px 0 var(--primary-dark)' : 'none',
+                }}>
+                {displayLabel}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -96,7 +104,7 @@ export default function ExercisesPage() {
         {filtered.length === 0 ? (
           <div style={{ padding: '40px 20px', textAlign: 'center', border: '2px solid var(--border)' }}>
             <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '16px', color: 'var(--text-muted)' }}>
-              NO MOVEMENTS FOUND
+              {loc.exercises.notFound}
             </p>
           </div>
         ) : filtered.map(ex => (
@@ -121,6 +129,7 @@ export default function ExercisesPage() {
                 letterSpacing: '0',
               }}>{GROUP_TAG[ex.group] || ex.group.slice(0,2).toUpperCase()}</span>
             </div>
+            {/* Exercise names and metadata are user data — NOT translated */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '15px', color: 'var(--text)', letterSpacing: '0.04em' }}>
                 {ex.name}

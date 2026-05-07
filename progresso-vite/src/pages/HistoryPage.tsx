@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db, type SavedWorkout } from '../lib/db/database'
+import { useLanguage } from '../contexts/LanguageContext'
 
-function fmtDuration(sec: number) {
+function fmtDuration(sec: number, minUnit: string, hourUnit: string) {
   const m = Math.floor(sec / 60)
-  return m < 60 ? `${m}MIN` : `${Math.floor(m/60)}H${m%60}M`
+  return m < 60 ? `${m}${minUnit}` : `${Math.floor(m/60)}${hourUnit}${m%60}${minUnit}`
 }
 function fmtDate(ts: number) {
   return new Date(ts).toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', weekday: 'short' }).toUpperCase()
@@ -15,12 +16,17 @@ function fmtTime(ts: number) {
 
 export default function HistoryPage() {
   const navigate = useNavigate()
+  const { loc } = useLanguage()
   const [workouts, setWorkouts] = useState<SavedWorkout[]>([])
   const [expanded, setExpanded] = useState<string | null>(null)
 
   useEffect(() => {
     db.workouts.orderBy('startedAt').reverse().toArray().then(setWorkouts)
   }, [])
+
+  const sessionCountLabel = workouts.length === 1
+    ? `${workouts.length} ${loc.history.recordedOne}`
+    : `${workouts.length} ${loc.history.recordedMany}`
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -29,10 +35,10 @@ export default function HistoryPage() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
             <h1 style={{ fontFamily: 'var(--font-brutal)', fontSize: '30px', color: 'var(--primary)', letterSpacing: '0.06em' }}>
-              IRON LOG
+              {loc.history.title}
             </h1>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', letterSpacing: '0.08em' }}>
-              // {workouts.length} SESSION{workouts.length !== 1 ? 'S' : ''} RECORDED
+              // {sessionCountLabel}
             </p>
           </div>
           {/* Manual add entry button */}
@@ -45,7 +51,7 @@ export default function HistoryPage() {
               fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em',
               padding: '10px 14px', cursor: 'pointer', flexShrink: 0,
             }}>
-            + FORGE
+            {loc.history.forgeBtn}
           </button>
         </div>
       </div>
@@ -62,8 +68,12 @@ export default function HistoryPage() {
             border: '2px solid var(--border)', borderLeft: '4px solid var(--text-dim)',
           }}>
             <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '48px', color: 'var(--text-dim)' }}>☠</p>
-            <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '18px', color: 'var(--text-muted)', marginTop: '12px' }}>NO SESSIONS LOGGED</p>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>&gt; BEGIN YOUR FIRST SESSION_</p>
+            <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '18px', color: 'var(--text-muted)', marginTop: '12px' }}>
+              {loc.history.noSessionsTitle}
+            </p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+              {loc.history.noSessionsSub}
+            </p>
           </div>
         ) : workouts.map(w => (
           <div key={w.id} style={{ border: '2px solid var(--border)', borderLeft: '4px solid var(--primary)', background: 'var(--surface)' }}>
@@ -81,10 +91,11 @@ export default function HistoryPage() {
                   color: 'var(--text)', letterSpacing: '0.04em',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
-                  {w.exercises.map(e => e.name).join(' · ') || 'EMPTY SESSION'}
+                  {/* Exercise names are user-stored DB data — NOT translated */}
+                  {w.exercises.map(e => e.name).join(' · ') || loc.history.emptySession}
                 </p>
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  {fmtDate(w.startedAt)} ╱ {fmtTime(w.startedAt)} ╱ {fmtDuration(w.durationSec)}
+                  {fmtDate(w.startedAt)} ╱ {fmtTime(w.startedAt)} ╱ {fmtDuration(w.durationSec, loc.workout.minUnit, loc.workout.hourUnit)}
                 </p>
               </div>
               <div style={{ marginLeft: '12px', textAlign: 'right', flexShrink: 0 }}>
@@ -92,7 +103,7 @@ export default function HistoryPage() {
                   {w.totalVolume > 0 ? w.totalVolume.toFixed(0) : '—'}
                 </p>
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)' }}>
-                  KG ╱ {w.totalSets} SETS
+                  {loc.history.kgLabel} ╱ {w.totalSets} {loc.history.setsLabel}
                 </p>
               </div>
               <span style={{
@@ -110,7 +121,7 @@ export default function HistoryPage() {
                   <div key={ei} style={{ padding: '12px 14px', borderTop: ei > 0 ? '1px solid var(--border)' : undefined }}>
                     <p style={{ fontFamily: 'var(--font-brutal)', fontSize: '13px', color: 'var(--primary)', letterSpacing: '0.06em', marginBottom: '8px' }}>
                       ▸ {ex.name}
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginLeft: '8px', fontFamily: 'var(--font-mono)' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginLeft: '8px' }}>
                         [{ex.equipment} ╱ {ex.group}]
                       </span>
                     </p>
@@ -123,7 +134,7 @@ export default function HistoryPage() {
                         color: s.done ? 'var(--text)' : 'var(--text-muted)',
                       }}>
                         <span style={{ width: '20px', color: 'var(--text-muted)', fontSize: '11px' }}>{si+1}</span>
-                        <span>{s.weight || '—'} KG</span>
+                        <span>{s.weight || '—'} {loc.history.kgLabel}</span>
                         <span style={{ color: 'var(--text-dim)' }}>×</span>
                         <span>{s.reps || '—'} {s.repsUnit}</span>
                         {s.done && <span style={{ marginLeft: 'auto', color: 'var(--primary)', fontSize: '11px' }}>■ DONE</span>}
