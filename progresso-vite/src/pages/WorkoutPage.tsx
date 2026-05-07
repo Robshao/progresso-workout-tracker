@@ -48,7 +48,7 @@ export default function WorkoutPage() {
       <section>
         <h2 className="mb-3 text-base font-semibold" style={{ color: 'var(--text)' }}>本週摘要</h2>
         <div className="rounded-xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
             <Stat icon={<Zap size={18}/>} label="總容量" value={weekVol > 0 ? weekVol.toFixed(0) : '—'} unit="kg"/>
             <Stat icon={<Dumbbell size={18}/>} label="訓練次數" value={weekCount > 0 ? String(weekCount) : '—'} unit="次"/>
             <Stat icon={<Clock size={18}/>} label="本週組數" value="—" unit=""/>
@@ -94,10 +94,10 @@ export default function WorkoutPage() {
 
 function Stat({ icon, label, value, unit }: { icon: React.ReactNode; label: string; value: string; unit: string }) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
       <span style={{ color: 'var(--primary)' }}>{icon}</span>
-      <span className="text-lg font-bold" style={{ color: 'var(--primary)' }}>{value} {unit}</span>
-      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</span>
+      <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--primary)' }}>{value} {unit}</span>
+      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{label}</span>
     </div>
   )
 }

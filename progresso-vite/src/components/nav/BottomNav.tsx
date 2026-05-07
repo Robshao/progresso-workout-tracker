@@ -11,14 +11,39 @@ const tabs = [
 
 export default function BottomNav() {
   return (
-    <nav className="flex border-t shrink-0" style={{ background: 'var(--surface)', borderColor: 'var(--border)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <nav style={{
+      display: 'flex',
+      flexDirection: 'row',
+      width: '100%',
+      flexShrink: 0,
+      borderTop: '1px solid var(--border)',
+      background: 'var(--surface)',
+      paddingBottom: 'env(safe-area-inset-bottom)',
+    }}>
       {tabs.map(({ to, icon: Icon, label }) => (
-        <NavLink key={to} to={to} className="flex flex-1 flex-col items-center gap-1 py-3 text-xs no-underline transition-colors"
-          style={({ isActive }) => ({ color: isActive ? 'var(--primary)' : 'var(--text-muted)' })}>
+        <NavLink
+          key={to}
+          to={to}
+          style={({ isActive }) => ({
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '4px',
+            paddingTop: '10px',
+            paddingBottom: '10px',
+            fontSize: '11px',
+            textDecoration: 'none',
+            color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+            fontWeight: isActive ? 600 : 400,
+            transition: 'color 0.15s',
+          })}
+        >
           {({ isActive }) => (
             <>
               <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
-              <span style={{ fontWeight: isActive ? 600 : 400 }}>{label}</span>
+              <span>{label}</span>
             </>
           )}
         </NavLink>
